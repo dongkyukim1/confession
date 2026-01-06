@@ -4,7 +4,7 @@
  * 사용자가 고백을 작성하면 다른 사람의 랜덤 고백을 볼 수 있는 앱
  */
 import React from 'react';
-import {StatusBar} from 'react-native';
+import {StatusBar, ImageBackground, StyleSheet} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer, DefaultTheme, DarkTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -18,11 +18,14 @@ import {
   MyDiaryScreen,
   ViewedDiaryScreen,
   ProfileScreen,
+  AnimationShowcase,
+  IconShowcase,
 } from './src/screens';
 import {RootStackParamList, BottomTabParamList} from './src/types';
 import {ModalProvider} from './src/contexts/ModalContext';
 import {ThemeProvider, useTheme} from './src/contexts/ThemeContext';
 import {typography} from './src/theme';
+import {BACKGROUNDS} from './src/constants/assets';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -31,12 +34,34 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
  * 하단 탭 네비게이터
  */
 function MainTabs() {
-  const {colors} = useTheme();
+  const {colors, currentThemeName} = useTheme();
+  
+  // 테마별 배경 이미지 선택
+  const getBackgroundImage = () => {
+    const themeMap: {[key: string]: any} = {
+      light: BACKGROUNDS.light,
+      dark: BACKGROUNDS.dark,
+      ocean: BACKGROUNDS.ocean,
+      sunset: BACKGROUNDS.sunset,
+      forest: BACKGROUNDS.forest,
+      purple: BACKGROUNDS.purple,
+    };
+    return themeMap[currentThemeName] || BACKGROUNDS.light;
+  };
   
   return (
-    <Tab.Navigator
+    <ImageBackground
+      source={getBackgroundImage()}
+      style={styles.backgroundContainer}
+      resizeMode="cover"
+      imageStyle={styles.backgroundImage}>
+      
+      <Tab.Navigator
       screenOptions={({route}) => ({
         headerShown: false,
+        sceneContainerStyle: {
+          backgroundColor: 'transparent', // 화면 배경 투명
+        },
         tabBarIcon: ({focused, color}) => {
           let iconName: string;
 
@@ -57,7 +82,7 @@ function MainTabs() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.surface + '66', // 40% 불투명도 (배경 확실히 보이도록!)
           borderTopWidth: 0,
           height: 70,
           paddingBottom: 12,
@@ -67,6 +92,7 @@ function MainTabs() {
           shadowOffset: {width: 0, height: -4},
           shadowOpacity: 0.1,
           shadowRadius: 12,
+          position: 'absolute', // 배경이 하단 탭 뒤로 보이도록
         },
         tabBarLabelStyle: {
           fontSize: typography.fontSize.xs,
@@ -98,6 +124,7 @@ function MainTabs() {
         options={{tabBarLabel: '마이페이지'}}
       />
     </Tab.Navigator>
+    </ImageBackground>
   );
 }
 
@@ -114,7 +141,7 @@ function AppContent() {
         colors: {
           ...DarkTheme.colors,
           primary: colors.primary,
-          background: colors.background,
+          background: 'transparent', // 투명하게!
           card: colors.surface,
           text: colors.textPrimary,
           border: colors.border,
@@ -125,7 +152,7 @@ function AppContent() {
         colors: {
           ...DefaultTheme.colors,
           primary: colors.primary,
-          background: colors.background,
+          background: 'transparent', // 투명하게!
           card: colors.surface,
           text: colors.textPrimary,
           border: colors.border,
@@ -143,7 +170,7 @@ function AppContent() {
           screenOptions={{
             headerShown: false,
             animation: 'fade',
-            contentStyle: {backgroundColor: colors.background},
+            contentStyle: {backgroundColor: 'transparent'}, // 투명하게!
           }}>
           <Stack.Screen name="MainTabs" component={MainTabs} />
           <Stack.Screen
@@ -152,6 +179,7 @@ function AppContent() {
             options={{
               animation: 'slide_from_bottom',
               presentation: 'modal',
+              gestureEnabled: true, // iOS 스와이프 제스처 활성화
             }}
           />
           <Stack.Screen
@@ -160,6 +188,24 @@ function AppContent() {
             options={{
               animation: 'fade_from_bottom',
               presentation: 'modal',
+            }}
+          />
+          <Stack.Screen
+            name="AnimationShowcase"
+            component={AnimationShowcase}
+            options={{
+              headerShown: true,
+              headerTitle: '애니메이션 쇼케이스',
+              animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="IconShowcase"
+            component={IconShowcase}
+            options={{
+              headerShown: true,
+              headerTitle: '아이콘 쇼케이스',
+              animation: 'slide_from_right',
             }}
           />
         </Stack.Navigator>
@@ -179,5 +225,14 @@ function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  backgroundContainer: {
+    flex: 1,
+  },
+  backgroundImage: {
+    opacity: 0.5, // 배경 이미지 50% 불투명도 (은은하게)
+  },
+});
 
 export default App;

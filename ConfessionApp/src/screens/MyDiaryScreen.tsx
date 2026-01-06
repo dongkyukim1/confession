@@ -9,7 +9,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
   ScrollView,
@@ -18,9 +17,10 @@ import {Confession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import ConfessionCard from '../components/ConfessionCard';
-import EmptyState from '../components/EmptyState';
+import CleanHeader from '../components/CleanHeader';
+import {AnimatedLoading} from '../components/AnimatedLoading';
+import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useModal, showDestructiveModal, showErrorModal, showInfoModal} from '../contexts/ModalContext';
-import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
@@ -134,10 +134,10 @@ export default function MyDiaryScreen() {
    * 빈 화면 렌더링
    */
   const renderEmpty = () => (
-    <EmptyState
-      emoji="📝"
+    <AnimatedEmptyState
       title="아직 작성한 일기가 없습니다"
       description="홈 탭에서 오늘의 하루를 기록해보세요"
+      size={180}
     />
   );
 
@@ -165,8 +165,17 @@ export default function MyDiaryScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={styles.container}>
+        <CleanHeader
+          title="내 일기장"
+          subtitle="나의 기록들"
+          icon="book-outline"
+        />
+        <AnimatedLoading
+          fullScreen
+          message="일기를 불러오는 중..."
+          size={150}
+        />
       </View>
     );
   }
@@ -174,24 +183,13 @@ export default function MyDiaryScreen() {
   return (
     <View style={styles.container}>
       {/* 헤더 */}
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>내 일기장</Text>
-            <Text style={styles.subtitle}>작성한 일기 {confessions.length}개</Text>
-          </View>
-          <View style={styles.statsContainer}>
-            <View style={styles.statBadge}>
-              <Ionicons name="book" size={20} color={colors.primary} />
-              <Text style={styles.statNumber}>{confessions.length}</Text>
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
+      <CleanHeader
+        title="내 일기장"
+        subtitle={`작성한 일기 ${confessions.length}개`}
+        icon="book-outline"
+        count={confessions.length}
+        showBorder={true}
+      />
 
       {/* 태그 필터 */}
       {allTags.length > 0 && (
@@ -275,54 +273,13 @@ export default function MyDiaryScreen() {
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
     backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  title: {
-    ...typography.styles.title,
-    color: colors.surface,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.styles.body,
-    color: colors.surface,
-    opacity: 0.9,
-  },
-  statsContainer: {
-    alignItems: 'center',
-  },
-  statBadge: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 60,
-    ...shadows.small,
-  },
-  statNumber: {
-    ...typography.styles.headline,
-    color: colors.primary,
-    marginTop: spacing.xs,
-    fontWeight: typography.fontWeight.bold,
   },
   tagFilter: {
     borderBottomWidth: 1,

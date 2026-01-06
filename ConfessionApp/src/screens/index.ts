@@ -8,3 +8,7 @@ export {default as MyDiaryScreen} from './MyDiaryScreen';
 export {default as ViewedDiaryScreen} from './ViewedDiaryScreen';
 export {default as ProfileScreen} from './ProfileScreen';
 
+// 개발/쇼케이스 화면
+export {AnimationShowcase} from './AnimationShowcase';
+export {IconShowcase} from './IconShowcase';
+

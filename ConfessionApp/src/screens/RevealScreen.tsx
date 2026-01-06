@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
-  ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -27,6 +26,7 @@ import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 import {LikeDislikeButtons} from '../components/features/LikeDislikeButtons';
 import {ReportModal} from '../components/features/ReportModal';
+import {AnimatedLoading} from '../components/AnimatedLoading';
 
 type RevealScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Reveal'>;
@@ -307,8 +307,11 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>다른 사람의 하루를 찾는 중...</Text>
+        <AnimatedLoading
+          fullScreen
+          message="다른 사람의 하루를 찾는 중..."
+          size={180}
+        />
       </View>
     );
   }

@@ -67,13 +67,6 @@ export default function ConfessionCard({
 
   const CardContent = (
     <View style={styles.card}>
-      {/* 기분 배지 */}
-      {mood && (
-        <View style={styles.moodBadge}>
-          <Text style={styles.moodEmoji}>{mood}</Text>
-        </View>
-      )}
-      
       {/* 일기 내용 */}
       <Text style={styles.content} numberOfLines={4}>
         {content}
@@ -92,19 +85,29 @@ export default function ConfessionCard({
         </ScrollView>
       )}
 
-      {/* 태그 */}
-      {tags && tags.length > 0 && (
-        <View style={styles.tagsContainer}>
-          {tags.slice(0, 3).map((tag, idx) => (
-            <View key={idx} style={styles.tag}>
-              <Text style={styles.tagText}>#{tag}</Text>
-            </View>
-          ))}
-          {tags.length > 3 && (
-            <Text style={styles.moreTagsText}>+{tags.length - 3}</Text>
-          )}
-        </View>
-      )}
+      {/* 태그와 기분 아이콘 */}
+      <View style={styles.tagsRow}>
+        {/* 태그 */}
+        {tags && tags.length > 0 && (
+          <View style={styles.tagsContainer}>
+            {tags.slice(0, 3).map((tag, idx) => (
+              <View key={idx} style={styles.tag}>
+                <Text style={styles.tagText}>#{tag}</Text>
+              </View>
+            ))}
+            {tags.length > 3 && (
+              <Text style={styles.moreTagsText}>+{tags.length - 3}</Text>
+            )}
+          </View>
+        )}
+        
+        {/* 기분 배지 */}
+        {mood && (
+          <View style={styles.moodBadge}>
+            <Text style={styles.moodEmoji}>{mood}</Text>
+          </View>
+        )}
+      </View>
       
       {/* 푸터 */}
       <View style={styles.footer}>
@@ -141,21 +144,6 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderLight,
   },
-  moodBadge: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    backgroundColor: colors.backgroundAlt,
-    borderRadius: borderRadius.full,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.small,
-  },
-  moodEmoji: {
-    fontSize: 20,
-  },
   content: {
     ...typography.styles.body,
     color: colors.textPrimary,
@@ -174,11 +162,31 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     borderRadius: borderRadius.md,
     backgroundColor: colors.backgroundAlt,
   },
+  tagsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
   tagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
-    marginBottom: spacing.sm,
+    flex: 1,
+    alignItems: 'center',
+  },
+  moodBadge: {
+    backgroundColor: colors.backgroundAlt,
+    borderRadius: borderRadius.full,
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.small,
+    marginLeft: spacing.sm,
+  },
+  moodEmoji: {
+    fontSize: 20,
   },
   tag: {
     backgroundColor: colors.primary,

@@ -16,6 +16,7 @@ import {
   Dimensions,
   ScrollView,
   SafeAreaView,
+  BackHandler,
 } from 'react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList, Confession} from '../types';
@@ -55,6 +56,19 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   useEffect(() => {
     getOrCreateDeviceId().then(setDeviceId);
   }, []);
+
+  // Android 백 버튼 처리: 홈 화면으로 이동
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        navigation.navigate('MainTabs', {screen: 'Home'});
+        return true; // 이벤트 처리 완료
+      },
+    );
+
+    return () => backHandler.remove();
+  }, [navigation]);
 
   const handleSubmit = async () => {
     if (!confession.trim()) {
@@ -107,7 +121,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           '첫 번째 작성자',
           '아직 다른 일기가 없습니다.\n당신이 첫 번째입니다! 🎉',
           true,
-          [{text: '확인', onPress: () => navigation.goBack()}],
+          [{text: '확인', onPress: () => navigation.navigate('MainTabs', {screen: 'Home'})}],
         );
         return;
       }
@@ -135,7 +149,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('MainTabs', {screen: 'Home'})}
           activeOpacity={0.7}
           hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
           <View style={styles.backButtonInner}>

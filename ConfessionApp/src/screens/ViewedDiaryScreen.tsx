@@ -9,17 +9,16 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import {ViewedConfession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import ConfessionCard from '../components/ConfessionCard';
-import EmptyState from '../components/EmptyState';
+import CleanHeader from '../components/CleanHeader';
+import {AnimatedLoading} from '../components/AnimatedLoading';
+import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useModal, showErrorModal} from '../contexts/ModalContext';
-import LinearGradient from 'react-native-linear-gradient';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
@@ -86,10 +85,10 @@ export default function ViewedDiaryScreen() {
    * 빈 화면 렌더링
    */
   const renderEmpty = () => (
-    <EmptyState
-      emoji="👀"
+    <AnimatedEmptyState
       title="아직 본 일기가 없습니다"
       description="홈 탭에서 일기를 작성하고 다른 사람의 하루를 확인해보세요"
+      size={180}
     />
   );
 
@@ -122,8 +121,17 @@ export default function ViewedDiaryScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={styles.container}>
+        <CleanHeader
+          title="본 일기장"
+          subtitle="내가 본 일기들"
+          icon="eye-outline"
+        />
+        <AnimatedLoading
+          fullScreen
+          message="일기를 불러오는 중..."
+          size={150}
+        />
       </View>
     );
   }
@@ -131,26 +139,13 @@ export default function ViewedDiaryScreen() {
   return (
     <View style={styles.container}>
       {/* 헤더 */}
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={styles.header}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.title}>본 일기장</Text>
-            <Text style={styles.subtitle}>
-              조회한 일기 {viewedConfessions.length}개
-            </Text>
-          </View>
-          <View style={styles.statsContainer}>
-            <View style={styles.statBadge}>
-              <Ionicons name="eye" size={20} color={colors.primary} />
-              <Text style={styles.statNumber}>{viewedConfessions.length}</Text>
-            </View>
-          </View>
-        </View>
-      </LinearGradient>
+      <CleanHeader
+        title="본 일기장"
+        subtitle={`조회한 일기 ${viewedConfessions.length}개`}
+        icon="eye-outline"
+        count={viewedConfessions.length}
+        showBorder={true}
+      />
 
       {/* 목록 */}
       <FlatList
@@ -176,54 +171,13 @@ export default function ViewedDiaryScreen() {
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: 'transparent',
   },
   loadingContainer: {
     flex: 1,
     backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  header: {
-    paddingTop: 60,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  title: {
-    ...typography.styles.title,
-    color: colors.surface,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.styles.body,
-    color: colors.surface,
-    opacity: 0.9,
-  },
-  statsContainer: {
-    alignItems: 'center',
-  },
-  statBadge: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 60,
-    ...shadows.small,
-  },
-  statNumber: {
-    ...typography.styles.headline,
-    color: colors.primary,
-    marginTop: spacing.xs,
-    fontWeight: typography.fontWeight.bold,
   },
   listContent: {
     paddingTop: spacing.lg,

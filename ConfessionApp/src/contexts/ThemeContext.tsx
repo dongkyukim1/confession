@@ -62,16 +62,23 @@ export function ThemeProvider({children}: {children: ReactNode}) {
     }
   };
 
+  // 현재 테마 이름 계산
+  let currentThemeName: ThemeName;
+  if (themeMode === 'auto') {
+    currentThemeName = systemColorScheme === 'dark' ? 'dark' : 'light';
+  } else {
+    currentThemeName = themeMode;
+  }
+
   // 실제 다크 모드 여부 계산
-  const isDark =
-    themeMode === 'dark' ||
-    (themeMode === 'auto' && systemColorScheme === 'dark');
+  const isDark = currentThemeName === 'dark';
 
   // 테마에 따른 동적 색상 선택
-  const colors = isDark ? darkColors : lightColors;
+  const colors = themes[currentThemeName];
 
   return (
-    <ThemeContext.Provider value={{themeMode, isDark, setThemeMode, colors}}>
+    <ThemeContext.Provider 
+      value={{themeMode, isDark, setThemeMode, colors, currentThemeName}}>
       {children}
     </ThemeContext.Provider>
   );

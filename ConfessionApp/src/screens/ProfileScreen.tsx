@@ -10,16 +10,18 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showInfoModal, showDestructiveModal} from '../contexts/ModalContext';
 import StatCard from '../components/StatCard';
-import LinearGradient from 'react-native-linear-gradient';
+import CleanHeader from '../components/CleanHeader';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {useTheme} from '../contexts/ThemeContext';
 import {lightColors} from '../theme/colors';
+import {LOGO} from '../constants/assets';
 
 export default function ProfileScreen() {
   const [myConfessionCount, setMyConfessionCount] = useState(0);
@@ -72,25 +74,24 @@ export default function ProfileScreen() {
   };
 
   /**
-   * 테마 변경
+   * 테마 순환 변경
    */
-  const changeTheme = () => {
-    const themes: Array<{mode: 'light' | 'dark' | 'auto'; label: string}> = [
-      {mode: 'light', label: '라이트 모드'},
-      {mode: 'dark', label: '다크 모드'},
-      {mode: 'auto', label: '시스템 설정'},
+  const cycleTheme = () => {
+    const themeOrder: Array<typeof themeMode> = [
+      'light',
+      'dark',
+      'ocean',
+      'sunset',
+      'forest',
+      'purple',
+      'auto',
     ];
 
-    const currentIndex = themes.findIndex(t => t.mode === themeMode);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    const nextTheme = themes[nextIndex];
+    const currentIndex = themeOrder.indexOf(themeMode);
+    const nextIndex = (currentIndex + 1) % themeOrder.length;
+    const nextTheme = themeOrder[nextIndex];
 
-    setThemeMode(nextTheme.mode);
-    showInfoModal(
-      showModal,
-      '테마 변경',
-      `${nextTheme.label}로 변경되었습니다.`,
-    );
+    setThemeMode(nextTheme);
   };
 
   /**
@@ -151,16 +152,15 @@ export default function ProfileScreen() {
   const styles = getStyles(colors);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       {/* 헤더 */}
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={styles.header}>
-        <Text style={styles.headerEmoji}>👤</Text>
-        <Text style={styles.title}>마이페이지</Text>
-      </LinearGradient>
+      <CleanHeader
+        title="마이페이지"
+        subtitle="설정 및 통계"
+        icon="person-outline"
+      />
+
+      <ScrollView showsVerticalScrollIndicator={false}>
 
       {/* 통계 카드 */}
       <View style={styles.statsContainer}>
@@ -184,17 +184,33 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>설정</Text>
         
-        <TouchableOpacity style={styles.menuItem} onPress={changeTheme} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.menuItem} onPress={cycleTheme} activeOpacity={0.7}>
           <View style={styles.menuIconContainer}>
             <Ionicons 
-              name={themeMode === 'dark' ? 'moon' : themeMode === 'light' ? 'sunny' : 'phone-portrait-outline'} 
+              name={
+                themeMode === 'dark' ? 'moon' : 
+                themeMode === 'light' ? 'sunny' :
+                themeMode === 'ocean' ? 'water' :
+                themeMode === 'sunset' ? 'partly-sunny' :
+                themeMode === 'forest' ? 'leaf' :
+                themeMode === 'purple' ? 'sparkles' :
+                'phone-portrait-outline'
+              } 
               size={24} 
               color={colors.primary} 
             />
           </View>
-          <Text style={styles.menuText}>테마</Text>
+          <Text style={styles.menuText}>Theme</Text>
           <Text style={styles.menuSubtext}>
-            {themeMode === 'dark' ? '다크' : themeMode === 'light' ? '라이트' : '시스템'}
+            {
+              themeMode === 'dark' ? 'Dark' : 
+              themeMode === 'light' ? 'Light' :
+              themeMode === 'ocean' ? 'Ocean' :
+              themeMode === 'sunset' ? 'Sunset' :
+              themeMode === 'forest' ? 'Forest' :
+              themeMode === 'purple' ? 'Purple' :
+              'Auto'
+            }
           </Text>
           <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
         </TouchableOpacity>
@@ -226,33 +242,25 @@ export default function ProfileScreen() {
 
       {/* 앱 정보 */}
       <View style={styles.footer}>
+        <Image 
+          source={LOGO.main} 
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <Text style={styles.footerText}>너의 오늘, 나의 오늘 v1.0.0</Text>
         <Text style={styles.footerSubtext}>
           모든 일기는 익명으로 처리됩니다
         </Text>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 }
 
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-    alignItems: 'center',
-  },
-  headerEmoji: {
-    fontSize: 56,
-    marginBottom: spacing.md,
-  },
-  title: {
-    ...typography.styles.title,
-    color: colors.surface,
+    backgroundColor: 'transparent',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -291,8 +299,6 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   menuIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.backgroundAlt,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -310,6 +316,11 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   footer: {
     alignItems: 'center',
     paddingVertical: spacing['2xl'],
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: spacing.lg,
   },
   footerText: {
     ...typography.styles.caption,

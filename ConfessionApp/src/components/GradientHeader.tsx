@@ -4,7 +4,7 @@
  * 화면 상단에 배치되는 세련된 그라데이션 헤더
  */
 import React from 'react';
-import {View, Text, StyleSheet, Dimensions} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {typography, spacing} from '../theme';
 import {lightColors} from '../theme/colors';
@@ -15,8 +15,6 @@ interface GradientHeaderProps {
   subtitle?: string;
   emoji?: string;
 }
-
-const {width} = Dimensions.get('window');
 
 export default function GradientHeader({
   title,

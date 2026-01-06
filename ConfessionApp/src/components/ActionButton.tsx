@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'small' | 'medium' | 'large';
@@ -44,6 +46,9 @@ export default function ActionButton({
   fullWidth = false,
   style,
 }: ActionButtonProps) {
+  const {colors} = useTheme();
+  const styles = getStyles(colors);
+
   const buttonStyle = [
     styles.button,
     styles[`button_${size}`],
@@ -117,7 +122,7 @@ export default function ActionButton({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,5 +195,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
 });
+
+
 
 

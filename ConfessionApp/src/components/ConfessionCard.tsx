@@ -15,7 +15,9 @@ import {
   ScrollView,
   Animated,
 } from 'react-native';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 interface ConfessionCardProps {
   content: string;
@@ -42,6 +44,7 @@ export default function ConfessionCard({
   tags,
   index = 0,
 }: ConfessionCardProps) {
+  const {colors} = useTheme();
   /**
    * 시간 포맷팅
    */
@@ -59,6 +62,8 @@ export default function ConfessionCard({
     if (days < 7) return `${days}일 전`;
     return date.toLocaleDateString('ko-KR');
   };
+
+  const styles = getStyles(colors);
 
   const CardContent = (
     <View style={styles.card}>
@@ -125,7 +130,7 @@ export default function ConfessionCard({
   return CardContent;
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.xl,

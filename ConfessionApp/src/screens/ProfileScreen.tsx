@@ -17,14 +17,15 @@ import {useModal, showInfoModal, showDestructiveModal} from '../contexts/ModalCo
 import StatCard from '../components/StatCard';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
 import {useTheme} from '../contexts/ThemeContext';
+import {lightColors} from '../theme/colors';
 
 export default function ProfileScreen() {
   const [myConfessionCount, setMyConfessionCount] = useState(0);
   const [viewedCount, setViewedCount] = useState(0);
   const {showModal} = useModal();
-  const {themeMode, setThemeMode} = useTheme();
+  const {themeMode, setThemeMode, colors} = useTheme();
 
   useEffect(() => {
     fetchStatistics();
@@ -147,6 +148,8 @@ export default function ProfileScreen() {
     );
   };
 
+  const styles = getStyles(colors);
+
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* 헤더 */}
@@ -232,7 +235,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

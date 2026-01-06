@@ -18,3 +18,5 @@ CREATE INDEX IF NOT EXISTS idx_confessions_tags ON confessions USING GIN (tags);
 -- 기존 데이터는 null로 유지 (새로 작성하는 일기만 리치 컨텐츠 사용)
 
 
+
+

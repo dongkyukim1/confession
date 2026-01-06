@@ -1,18 +1,21 @@
 /**
  * 테마 컨텍스트
  * 
- * 다크 모드 / 라이트 모드 전환 기능
+ * 다양한 테마 모드 지원 (Light, Dark, Ocean, Sunset, Forest, Purple Dream)
  */
 import React, {createContext, useContext, useState, useEffect, ReactNode} from 'react';
 import {Appearance, ColorSchemeName} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {themes, ThemeName, ColorScheme} from '../theme/colors';
 
-type ThemeMode = 'light' | 'dark' | 'auto';
+type ThemeMode = ThemeName | 'auto';
 
 interface ThemeContextType {
   themeMode: ThemeMode;
   isDark: boolean;
   setThemeMode: (mode: ThemeMode) => void;
+  colors: ColorScheme;
+  currentThemeName: ThemeName;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -64,8 +67,11 @@ export function ThemeProvider({children}: {children: ReactNode}) {
     themeMode === 'dark' ||
     (themeMode === 'auto' && systemColorScheme === 'dark');
 
+  // 테마에 따른 동적 색상 선택
+  const colors = isDark ? darkColors : lightColors;
+
   return (
-    <ThemeContext.Provider value={{themeMode, isDark, setThemeMode}}>
+    <ThemeContext.Provider value={{themeMode, isDark, setThemeMode, colors}}>
       {children}
     </ThemeContext.Provider>
   );
@@ -78,5 +84,7 @@ export function useTheme() {
   }
   return context;
 }
+
+
 
 

@@ -20,14 +20,18 @@ import {DiaryEntry} from '../types/features';
 import {Button} from '../components/ui/Button';
 import {Tag} from '../components/ui/Tag';
 import {ReactionPicker} from '../components/features/ReactionPicker';
+import {LikeDislikeButtons} from '../components/features/LikeDislikeButtons';
+import {ReportModal} from '../components/features/ReportModal';
 import {LoadingSpinner} from '../components/ui/LoadingSpinner';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {PREDEFINED_TAGS} from '../types/features';
+import {LikeType, ReportReason} from '../types/database';
 import {useTheme} from '../theme';
 import {spacing, typography, borderRadius, shadows} from '../theme/tokens';
 import {triggerHaptic} from '../utils/haptics';
 import {useToast} from '../components/ui/Toast';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type EnhancedRevealScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Reveal'>;
@@ -48,6 +52,16 @@ export default function EnhancedRevealScreen({
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [reactions, setReactions] = useState<Record<string, number>>({});
   const [userReaction, setUserReaction] = useState<string | null>(null);
+  
+  // 좋아요/싫어요 상태
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
+  const [userLikeType, setUserLikeType] = useState<LikeType | null>(null);
+  
+  // 신고 상태
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [isReported, setIsReported] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
   const {colors} = useTheme();
   const {showToast} = useToast();
@@ -79,6 +93,8 @@ export default function EnhancedRevealScreen({
       if (error) throw error;
 
       setDiary(data as DiaryEntry);
+      setLikeCount(data.like_count || 0);
+      setDislikeCount(data.dislike_count || 0);
 
       // Fetch reactions
       const {data: reactionsData} = await supabase
@@ -116,6 +132,28 @@ export default function EnhancedRevealScreen({
         .single();
 
       setIsBookmarked(!!bookmarkData);
+      
+      // Check user's like/dislike
+      const {data: likeData} = await supabase
+        .from('likes')
+        .select('like_type')
+        .eq('confession_id', confessionId)
+        .eq('device_id', id)
+        .single();
+
+      if (likeData) {
+        setUserLikeType(likeData.like_type);
+      }
+      
+      // Check if user has reported
+      const {data: reportData} = await supabase
+        .from('reports')
+        .select('id')
+        .eq('confession_id', confessionId)
+        .eq('device_id', id)
+        .single();
+
+      setIsReported(!!reportData);
 
       // Update view count
       await supabase
@@ -252,6 +290,109 @@ export default function EnhancedRevealScreen({
     } catch (error) {
       console.error('Bookmark error:', error);
       showToast({message: '북마크 저장 실패', type: 'error'});
+    }
+  };
+  
+  const handleLike = async () => {
+    if (!deviceId) return;
+
+    try {
+      if (userLikeType === 'like') {
+        // 좋아요 취소
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('device_id', deviceId);
+
+        setUserLikeType(null);
+        setLikeCount(prev => Math.max(prev - 1, 0));
+      } else {
+        // 좋아요 추가 (또는 싫어요에서 전환)
+        await supabase
+          .from('likes')
+          .upsert({
+            device_id: deviceId,
+            confession_id: confessionId,
+            like_type: 'like',
+          }, {
+            onConflict: 'device_id,confession_id',
+          });
+
+        const wasDisliked = userLikeType === 'dislike';
+        setUserLikeType('like');
+        setLikeCount(prev => prev + 1);
+        if (wasDisliked) {
+          setDislikeCount(prev => Math.max(prev - 1, 0));
+        }
+      }
+    } catch (error) {
+      console.error('Like error:', error);
+      showToast({message: '좋아요 실패', type: 'error'});
+    }
+  };
+
+  const handleDislike = async () => {
+    if (!deviceId) return;
+
+    try {
+      if (userLikeType === 'dislike') {
+        // 싫어요 취소
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('device_id', deviceId);
+
+        setUserLikeType(null);
+        setDislikeCount(prev => Math.max(prev - 1, 0));
+      } else {
+        // 싫어요 추가 (또는 좋아요에서 전환)
+        await supabase
+          .from('likes')
+          .upsert({
+            device_id: deviceId,
+            confession_id: confessionId,
+            like_type: 'dislike',
+          }, {
+            onConflict: 'device_id,confession_id',
+          });
+
+        const wasLiked = userLikeType === 'like';
+        setUserLikeType('dislike');
+        setDislikeCount(prev => prev + 1);
+        if (wasLiked) {
+          setLikeCount(prev => Math.max(prev - 1, 0));
+        }
+      }
+    } catch (error) {
+      console.error('Dislike error:', error);
+      showToast({message: '싫어요 실패', type: 'error'});
+    }
+  };
+
+  const handleReport = async (reason: ReportReason, description?: string) => {
+    if (!deviceId || isReported) return;
+
+    setIsSubmittingReport(true);
+    try {
+      await supabase.from('reports').insert({
+        device_id: deviceId,
+        confession_id: confessionId,
+        reason,
+        description,
+      });
+
+      setIsReported(true);
+      showToast({
+        message: '신고가 접수되었습니다',
+        type: 'success',
+      });
+    } catch (error) {
+      console.error('Report error:', error);
+      showToast({message: '신고 실패', type: 'error'});
+    } finally {
+      setIsSubmittingReport(false);
     }
   };
 
@@ -392,6 +533,45 @@ export default function EnhancedRevealScreen({
         {/* Actions */}
         {isRevealed && (
           <Animated.View style={[styles.actions, {opacity: fadeAnim}]}>
+            {/* 좋아요/싫어요 */}
+            <View style={styles.actionsRow}>
+              <LikeDislikeButtons
+                likeCount={likeCount}
+                dislikeCount={dislikeCount}
+                userLikeType={userLikeType}
+                onLike={handleLike}
+                onDislike={handleDislike}
+              />
+              
+              {/* 신고 버튼 */}
+              <Pressable
+                onPress={() => {
+                  if (isReported) {
+                    showToast({message: '이미 신고한 게시물입니다', type: 'info'});
+                  } else {
+                    setReportModalVisible(true);
+                  }
+                }}
+                style={[
+                  styles.reportButton,
+                  {
+                    backgroundColor: isReported
+                      ? colors.neutral[200]
+                      : colors.neutral[100],
+                    borderColor: isReported
+                      ? colors.neutral[300]
+                      : colors.neutral[200],
+                    opacity: isReported ? 0.6 : 1,
+                  },
+                ]}>
+                <Ionicons
+                  name="flag"
+                  size={20}
+                  color={isReported ? colors.neutral[500] : colors.danger[500]}
+                />
+              </Pressable>
+            </View>
+            
             {/* Reactions */}
             <View style={styles.actionsRow}>
               <ReactionPicker
@@ -430,6 +610,15 @@ export default function EnhancedRevealScreen({
             </Button>
           </Animated.View>
         )}
+      </ScrollView>
+      
+      {/* 신고 모달 */}
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        onSubmit={handleReport}
+        isSubmitting={isSubmittingReport}
+      />
       </ScrollView>
     </View>
   );
@@ -548,6 +737,14 @@ const styles = StyleSheet.create({
   },
   bookmarkIcon: {
     fontSize: typography.sizes.xxl,
+  },
+  reportButton: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   writeButton: {
     marginTop: spacing.md,

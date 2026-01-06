@@ -6,7 +6,7 @@
 import React from 'react';
 import {StatusBar} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme, DarkTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -21,8 +21,8 @@ import {
 } from './src/screens';
 import {RootStackParamList, BottomTabParamList} from './src/types';
 import {ModalProvider} from './src/contexts/ModalContext';
-import {ThemeProvider} from './src/contexts/ThemeContext';
-import {colors, typography} from './src/theme';
+import {ThemeProvider, useTheme} from './src/contexts/ThemeContext';
+import {typography} from './src/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -31,6 +31,8 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
  * 하단 탭 네비게이터
  */
 function MainTabs() {
+  const {colors} = useTheme();
+  
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
@@ -99,38 +101,79 @@ function MainTabs() {
   );
 }
 
+/**
+ * 앱 내부 컴포넌트 (테마 적용)
+ */
+function AppContent() {
+  const {isDark, colors} = useTheme();
+
+  // 테마에 따른 Navigation 테마 생성
+  const navigationTheme = isDark
+    ? {
+        ...DarkTheme,
+        colors: {
+          ...DarkTheme.colors,
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.surface,
+          text: colors.textPrimary,
+          border: colors.border,
+        },
+      }
+    : {
+        ...DefaultTheme,
+        colors: {
+          ...DefaultTheme.colors,
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.surface,
+          text: colors.textPrimary,
+          border: colors.border,
+        },
+      };
+
+  return (
+    <>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
+      <NavigationContainer theme={navigationTheme}>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: 'fade',
+            contentStyle: {backgroundColor: colors.background},
+          }}>
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen
+            name="Write"
+            component={WriteScreen}
+            options={{
+              animation: 'slide_from_bottom',
+              presentation: 'modal',
+            }}
+          />
+          <Stack.Screen
+            name="Reveal"
+            component={RevealScreen}
+            options={{
+              animation: 'fade_from_bottom',
+              presentation: 'modal',
+            }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
+  );
+}
+
 function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <ModalProvider>
-          <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-          <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{
-              headerShown: false,
-              animation: 'fade',
-              contentStyle: {backgroundColor: '#f8f9fa'},
-            }}>
-            <Stack.Screen name="MainTabs" component={MainTabs} />
-            <Stack.Screen
-              name="Write"
-              component={WriteScreen}
-              options={{
-                animation: 'slide_from_bottom',
-                presentation: 'modal',
-              }}
-            />
-            <Stack.Screen
-              name="Reveal"
-              component={RevealScreen}
-              options={{
-                animation: 'fade_from_bottom',
-                presentation: 'modal',
-              }}
-            />
-          </Stack.Navigator>
-          </NavigationContainer>
+          <AppContent />
         </ModalProvider>
       </ThemeProvider>
     </SafeAreaProvider>

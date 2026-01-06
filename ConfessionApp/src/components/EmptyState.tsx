@@ -5,7 +5,9 @@
  */
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
-import {colors, typography, spacing} from '../theme';
+import {typography, spacing} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 interface EmptyStateProps {
   emoji: string;
@@ -18,6 +20,9 @@ export default function EmptyState({
   title,
   description,
 }: EmptyStateProps) {
+  const {colors} = useTheme();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.container}>
       <Text style={styles.emoji}>{emoji}</Text>
@@ -27,7 +32,7 @@ export default function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -51,5 +56,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 });
+
+
 
 

@@ -24,7 +24,9 @@ import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../contexts/ModalContext';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, spacing, borderRadius} from '../theme';
+import {spacing, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 import MoodSelector from '../components/MoodSelector';
 import TagInput from '../components/TagInput';
 import ImagePickerComponent from '../components/ImagePicker';
@@ -48,6 +50,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const {showModal} = useModal();
+  const {colors} = useTheme();
 
   useEffect(() => {
     getOrCreateDeviceId().then(setDeviceId);
@@ -123,6 +126,8 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
 
   const charProgress = (confession.length / MAX_CHARS) * 100;
   const isOverLimit = confession.length > MAX_CHARS;
+
+  const styles = getStyles(colors);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -260,7 +265,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

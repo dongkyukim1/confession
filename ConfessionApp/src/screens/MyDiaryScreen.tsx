@@ -22,7 +22,9 @@ import EmptyState from '../components/EmptyState';
 import {useModal, showDestructiveModal, showErrorModal, showInfoModal} from '../contexts/ModalContext';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 export default function MyDiaryScreen() {
   const [confessions, setConfessions] = useState<Confession[]>([]);
@@ -33,6 +35,7 @@ export default function MyDiaryScreen() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
   const {showModal} = useModal();
+  const {colors} = useTheme();
 
   useEffect(() => {
     const init = async () => {
@@ -158,10 +161,12 @@ export default function MyDiaryScreen() {
     </TouchableOpacity>
   );
 
+  const styles = getStyles(colors);
+
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -267,7 +272,7 @@ export default function MyDiaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

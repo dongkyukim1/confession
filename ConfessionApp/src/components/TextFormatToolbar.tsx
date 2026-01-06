@@ -1,18 +1,14 @@
 /**
- * 텍스트 서식 툴바
- * 
- * 텍스트 굵게, 기울임, 색상 변경 기능
+ * 텍스트 서식 툴바 컴포넌트
+ *
+ * 일기 작성 시 텍스트 서식 지정 및 글자 수 표시
  */
-import React, {useState} from 'react';
-import {
-  View,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Text,
-  Dimensions,
-} from 'react-native';
-import {colors, spacing, borderRadius, shadows} from '../theme';
+import React from 'react';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import {spacing, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 export interface TextStyle {
   bold?: boolean;
@@ -20,37 +16,21 @@ export interface TextStyle {
   color?: string;
 }
 
-interface TextFormatToolbarProps {
+type TextFormatToolbarProps = {
   currentStyle: TextStyle;
   onStyleChange: (style: TextStyle) => void;
-  charCount?: number;
-  maxChars?: number;
-}
-
-const TEXT_COLORS = [
-  {color: colors.textPrimary, label: '기본'},
-  {color: colors.editorColors.red, label: '빨강'},
-  {color: colors.editorColors.orange, label: '주황'},
-  {color: colors.editorColors.yellow, label: '노랑'},
-  {color: colors.editorColors.green, label: '초록'},
-  {color: colors.editorColors.blue, label: '파랑'},
-  {color: colors.editorColors.purple, label: '보라'},
-  {color: colors.editorColors.pink, label: '핑크'},
-];
-
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
-const HORIZONTAL_PADDING = spacing.lg * 2;
-const GAP = spacing.sm;
-const BUTTON_COUNT = 3;
-const BUTTON_WIDTH = (SCREEN_WIDTH - HORIZONTAL_PADDING - GAP * (BUTTON_COUNT - 1)) / BUTTON_COUNT;
+  charCount: number;
+  maxChars: number;
+};
 
 export default function TextFormatToolbar({
   currentStyle,
   onStyleChange,
-  charCount = 0,
-  maxChars = 500,
+  charCount,
+  maxChars,
 }: TextFormatToolbarProps) {
-  const [showColorPicker, setShowColorPicker] = useState(false);
+  const {colors} = useTheme();
+  const styles = getStyles(colors);
 
   const toggleBold = () => {
     onStyleChange({...currentStyle, bold: !currentStyle.bold});
@@ -60,216 +40,127 @@ export default function TextFormatToolbar({
     onStyleChange({...currentStyle, italic: !currentStyle.italic});
   };
 
-  const selectColor = (color: string) => {
-    onStyleChange({...currentStyle, color});
-    setShowColorPicker(false);
+  const setColor = (color: string) => {
+    onStyleChange({
+      ...currentStyle,
+      color: currentStyle.color === color ? undefined : color,
+    });
   };
 
+  const isOverLimit = charCount > maxChars;
+
   return (
-    <>
+    <View style={styles.container}>
       <View style={styles.toolbarRow}>
-        <View style={styles.toolbar}>
-          {/* 굵게 */}
-          <TouchableOpacity
-            style={[styles.button, currentStyle.bold && styles.buttonActive]}
-            onPress={toggleBold}
-            activeOpacity={0.7}>
-            <Text style={[styles.buttonIcon, currentStyle.bold && styles.buttonIconActive]}>Aa</Text>
-            <Text style={[styles.buttonLabel, currentStyle.bold && styles.buttonLabelActive]}>
-              굵게
-            </Text>
-          </TouchableOpacity>
-
-          {/* 기울임 */}
-          <TouchableOpacity
-            style={[styles.button, currentStyle.italic && styles.buttonActive]}
-            onPress={toggleItalic}
-            activeOpacity={0.7}>
-            <Text style={[styles.buttonIcon, styles.italicIcon, currentStyle.italic && styles.buttonIconActive]}>Aa</Text>
-            <Text style={[styles.buttonLabel, currentStyle.italic && styles.buttonLabelActive]}>
-              기울임
-            </Text>
-          </TouchableOpacity>
-
-          {/* 색상 */}
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setShowColorPicker(true)}
-            activeOpacity={0.7}>
-            <View
-              style={[
-                styles.colorPreview,
-                {backgroundColor: currentStyle.color || colors.textPrimary},
-              ]}
-            />
-            <Text style={styles.buttonLabel}>색상</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* 글자 수 카운터 */}
-        <View style={styles.charCountContainer}>
-          <Text style={styles.charCount}>{charCount}/{maxChars}</Text>
-        </View>
-      </View>
-
-      {/* 색상 선택 모달 */}
-      <Modal
-        visible={showColorPicker}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowColorPicker(false)}>
+        {/* 볼드 */}
         <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowColorPicker(false)}>
-          <View style={styles.colorPickerContainer}>
-            <Text style={styles.colorPickerTitle}>텍스트 색상 선택</Text>
-            <View style={styles.colorGrid}>
-              {TEXT_COLORS.map(item => (
-                <TouchableOpacity
-                  key={item.color}
-                  style={[
-                    styles.colorOption,
-                    currentStyle.color === item.color && styles.colorOptionSelected,
-                  ]}
-                  onPress={() => selectColor(item.color)}
-                  activeOpacity={0.7}>
-                  <View
-                    style={[styles.colorCircle, {backgroundColor: item.color}]}
-                  />
-                  <Text style={styles.colorLabel}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+          style={[styles.button, currentStyle.bold && styles.activeButton]}
+          onPress={toggleBold}
+          activeOpacity={0.7}>
+          <Ionicons
+            name="text"
+            size={18}
+            color={currentStyle.bold ? colors.primary : colors.textSecondary}
+            style={{fontWeight: 'bold'}}
+          />
         </TouchableOpacity>
-      </Modal>
-    </>
+
+        {/* 이탤릭 */}
+        <TouchableOpacity
+          style={[styles.button, currentStyle.italic && styles.activeButton]}
+          onPress={toggleItalic}
+          activeOpacity={0.7}>
+          <Text
+            style={[
+              styles.italicIcon,
+              {
+                color: currentStyle.italic
+                  ? colors.primary
+                  : colors.textSecondary,
+              },
+            ]}>
+            I
+          </Text>
+        </TouchableOpacity>
+
+        {/* 색상 선택 */}
+        <View style={styles.colorRow}>
+          {Object.entries(colors.editorColors || {}).map(([key, color]) => (
+            <TouchableOpacity
+              key={key}
+              style={[
+                styles.colorButton,
+                {backgroundColor: color},
+                currentStyle.color === color && styles.activeColorButton,
+              ]}
+              onPress={() => setColor(color)}
+              activeOpacity={0.7}
+            />
+          ))}
+        </View>
+
+        {/* 글자 수 */}
+        <Text style={[styles.charCount, isOverLimit && styles.overLimit]}>
+          {charCount}/{maxChars}
+        </Text>
+      </View>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  toolbarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  toolbar: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.xs,
-    gap: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  button: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.backgroundAlt,
-  },
-  buttonActive: {
-    backgroundColor: colors.primary + '15',
-  },
-  buttonIcon: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  italicIcon: {
-    fontStyle: 'italic',
-  },
-  buttonIconActive: {
-    color: colors.primary,
-  },
-  buttonLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  buttonLabelActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  colorPreview: {
-    width: 18,
-    height: 18,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  charCountContainer: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  charCount: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: colors.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.lg,
-  },
-  colorPickerContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    width: '100%',
-    maxWidth: 320,
-    ...shadows.large,
-  },
-  colorPickerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: spacing.lg,
-    textAlign: 'center',
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  colorOption: {
-    width: '22%',
-    alignItems: 'center',
-    padding: spacing.sm,
-    borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  colorOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.backgroundAlt,
-  },
-  colorCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    marginBottom: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  colorLabel: {
-    fontSize: 11,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-});
-
-
+const getStyles = (colors: typeof lightColors) =>
+  StyleSheet.create({
+    container: {
+      marginBottom: spacing.md,
+    },
+    toolbarRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    button: {
+      width: 36,
+      height: 36,
+      borderRadius: borderRadius.sm,
+      backgroundColor: colors.backgroundAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    activeButton: {
+      backgroundColor: colors.primary + '20',
+      borderColor: colors.primary,
+    },
+    italicIcon: {
+      fontSize: 18,
+      fontStyle: 'italic',
+      fontWeight: '600',
+    },
+    colorRow: {
+      flexDirection: 'row',
+      gap: spacing.xs,
+      marginLeft: spacing.sm,
+    },
+    colorButton: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.border,
+    },
+    activeColorButton: {
+      borderWidth: 3,
+      borderColor: colors.textPrimary,
+    },
+    charCount: {
+      marginLeft: 'auto',
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '500',
+    },
+    overLimit: {
+      color: colors.error,
+      fontWeight: '600',
+    },
+  });

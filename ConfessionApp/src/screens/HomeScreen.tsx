@@ -1,27 +1,40 @@
 /**
- * 홈 화면 - 메인 대시보드
+ * 홈 화면 - 고해성사 작성
  *
- * 앱의 메인 화면으로 일기 작성하기 버튼과 간단한 통계를 보여줌
+ * 사용자가 자신의 고백을 작성하는 메인 화면
+ * 작성 완료 후 다른 사람의 고백을 볼 수 있음
  */
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
   Dimensions,
   ScrollView,
-  RefreshControl,
 } from 'react-native';
-import {CompositeNavigationProp, useFocusEffect} from '@react-navigation/native';
+import {CompositeNavigationProp} from '@react-navigation/native';
 import {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList, BottomTabParamList} from '../types';
+import {RootStackParamList, BottomTabParamList, Confession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
+import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../contexts/ModalContext';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, spacing, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
+import MoodSelector from '../components/MoodSelector';
+import TagInput from '../components/TagInput';
+import ImagePickerComponent from '../components/ImagePicker';
+import TextFormatToolbar, {TextStyle} from '../components/TextFormatToolbar';
+
+type ConfessionRow = Pick<Confession, 'id'>;
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, 'Home'>,
@@ -34,338 +47,312 @@ type HomeScreenProps = {
 
 const {height} = Dimensions.get('window');
 
-interface Stats {
-  myDiaryCount: number;
-  viewedDiaryCount: number;
-  totalDiaryCount: number;
-}
-
 export default function HomeScreen({navigation}: HomeScreenProps) {
+  const [confession, setConfession] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [stats, setStats] = useState<Stats>({
-    myDiaryCount: 0,
-    viewedDiaryCount: 0,
-    totalDiaryCount: 0,
-  });
-  const [refreshing, setRefreshing] = useState(false);
+  const [selectedMood, setSelectedMood] = useState<string | undefined>();
+  const [tags, setTags] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
+  const [textStyle, setTextStyle] = useState<TextStyle>({});
+  const {showModal} = useModal();
+  const {colors} = useTheme();
 
   useEffect(() => {
+    // 디바이스 ID 초기화
     getOrCreateDeviceId().then(setDeviceId);
   }, []);
 
-  const fetchStats = useCallback(async () => {
-    if (!deviceId) return;
+  /**
+   * 고해성사 제출 처리
+   */
+  const handleSubmit = async () => {
+    if (!confession.trim()) {
+      showWarningModal(showModal, '알림', '일기 내용을 입력해주세요.');
+      return;
+    }
+
+    if (confession.trim().length < 10) {
+      showWarningModal(showModal, '알림', '최소 10자 이상 작성해주세요.');
+      return;
+    }
+
+    if (!deviceId) {
+      showErrorModal(showModal, '오류', '잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      // 내 일기 수
-      const {count: myCount} = await supabase
+      // 일기 저장 (리치 컨텐츠 포함)
+      const {data, error} = await supabase
         .from('confessions')
-        .select('*', {count: 'exact', head: true})
-        .eq('device_id', deviceId);
+        .insert({
+          content: confession.trim(),
+          device_id: deviceId,
+          mood: selectedMood || null,
+          tags: tags.length > 0 ? tags : null,
+          images: images.length > 0 ? images : null,
+        })
+        .select()
+        .single<Confession>();
 
-      // 내가 본 일기 수
-      const {count: viewedCount} = await supabase
-        .from('viewed_confessions')
-        .select('*', {count: 'exact', head: true})
-        .eq('device_id', deviceId);
+      if (error) {
+        throw error;
+      }
 
-      // 전체 일기 수
-      const {count: totalCount} = await supabase
+      // 다른 사람의 랜덤 고해성사 가져오기
+      const {data: randomConfession, error: fetchError} = await supabase
         .from('confessions')
-        .select('*', {count: 'exact', head: true});
+        .select('id')
+        .neq('device_id', deviceId) // 내 것 제외
+        .neq('id', data.id) // 방금 작성한 것 제외
+        .order('view_count', {ascending: true}) // 적게 본 것 우선
+        .limit(10)
+        .returns<ConfessionRow[]>();
 
-      setStats({
-        myDiaryCount: myCount || 0,
-        viewedDiaryCount: viewedCount || 0,
-        totalDiaryCount: totalCount || 0,
-      });
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      if (!randomConfession || randomConfession.length === 0) {
+        showSuccessModal(
+          showModal,
+          '첫 번째 작성자',
+          '아직 다른 일기가 없습니다.\n당신이 첫 번째입니다! 🎉',
+          true,
+          [{text: '확인', onPress: () => setConfession('')}],
+        );
+        return;
+      }
+
+      // 랜덤으로 하나 선택
+      const randomIndex = Math.floor(Math.random() * randomConfession.length);
+      const selectedConfession = randomConfession[randomIndex];
+
+      // 입력 초기화 후 Reveal 화면으로 이동
+      setConfession('');
+      setSelectedMood(undefined);
+      setTags([]);
+      setImages([]);
+      setTextStyle({});
+      navigation.navigate('Reveal', {confessionId: selectedConfession.id});
     } catch (error) {
-      console.error('통계 로딩 오류:', error);
+      console.error('일기 저장 오류:', error);
+      showErrorModal(showModal, '오류', '저장 중 문제가 발생했습니다.\n잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
     }
-  }, [deviceId]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchStats();
-    }, [fetchStats])
-  );
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchStats();
-    setRefreshing(false);
   };
 
-  const handleWritePress = () => {
-    navigation.navigate('Write');
-  };
+  const styles = getStyles(colors);
 
   return (
-    <ScrollView
+    <KeyboardAvoidingView
       style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }>
-      {/* 헤더 영역 */}
-      <LinearGradient
-        colors={[colors.gradientStart, colors.gradientEnd]}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={styles.headerGradient}>
-        <Text style={styles.headerEmoji}>📔</Text>
-        <Text style={styles.headerTitle}>오늘의 일기</Text>
-        <Text style={styles.headerSubtitle}>
-          당신의 하루를 기록하고{'\n'}
-          다른 사람의 이야기를 들어보세요
-        </Text>
-      </LinearGradient>
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+        {/* 그라데이션 헤더 */}
+        <LinearGradient
+          colors={[colors.gradientStart, colors.gradientEnd]}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 1}}
+          style={styles.gradientHeader}>
+          <Text style={styles.headerEmoji}>✍️</Text>
+          <Text style={styles.headerTitle}>오늘의 일기</Text>
+          <Text style={styles.headerSubtitle}>
+            당신의 하루를 기록하세요{'\n'}
+            다른 사람의 이야기를 들어보세요
+          </Text>
+        </LinearGradient>
 
-      {/* 메인 액션 버튼 */}
-      <View style={styles.mainActionContainer}>
-        <TouchableOpacity
-          style={styles.writeButton}
-          onPress={handleWritePress}
-          activeOpacity={0.9}>
-          <LinearGradient
-            colors={[colors.gradientStart, colors.gradientEnd]}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-            style={styles.writeButtonGradient}>
-            <View style={styles.writeButtonContent}>
-              <View style={styles.writeButtonIconContainer}>
-                <Ionicons name="pencil" size={32} color={colors.surface} />
-              </View>
-              <View style={styles.writeButtonTextContainer}>
-                <Text style={styles.writeButtonTitle}>일기 쓰기</Text>
-                <Text style={styles.writeButtonSubtitle}>
-                  오늘의 이야기를 남겨보세요
+        {/* 입력 영역 */}
+        <View style={styles.content}>
+          {/* 기분 선택 */}
+          <MoodSelector
+            selectedMood={selectedMood}
+            onMoodSelect={setSelectedMood}
+          />
+
+          {/* 텍스트 서식 툴바 + 글자 수 */}
+          <TextFormatToolbar
+            currentStyle={textStyle}
+            onStyleChange={setTextStyle}
+            charCount={confession.length}
+            maxChars={500}
+          />
+
+          {/* 사진 첨부 */}
+          <ImagePickerComponent
+            images={images}
+            onImagesChange={setImages}
+            maxImages={3}
+          />
+
+          {/* 태그 입력 */}
+          <TagInput tags={tags} onTagsChange={setTags} />
+
+          {/* 일기 입력 */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[
+                styles.textInput,
+                textStyle.bold && {fontWeight: 'bold'},
+                textStyle.italic && {fontStyle: 'italic'},
+                textStyle.color && {color: textStyle.color},
+              ]}
+              placeholder="오늘 하루는 어땠나요?&#13;&#10;무슨 일이 있었는지 자유롭게 적어보세요..."
+              placeholderTextColor={colors.textTertiary}
+              multiline
+              maxLength={500}
+              value={confession}
+              onChangeText={setConfession}
+              editable={!isLoading}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* 제출 버튼 */}
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              (!confession.trim() || isLoading) && styles.submitButtonDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={!confession.trim() || isLoading}
+            activeOpacity={0.8}>
+            {!isLoading && (
+              <LinearGradient
+                colors={
+                  confession.trim()
+                    ? [colors.gradientStart, colors.gradientEnd]
+                    : [colors.borderDark, colors.borderDark]
+                }
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+                style={styles.submitGradient}>
+                <Ionicons
+                  name="paper-plane"
+                  size={20}
+                  color={colors.surface}
+                  style={styles.submitIcon}
+                />
+                <Text style={styles.submitButtonText}>
+                  일기 쓰고 다른 하루 보기
                 </Text>
+              </LinearGradient>
+            )}
+            {isLoading && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color={colors.surface} />
               </View>
-              <Ionicons name="chevron-forward" size={24} color={colors.surface} />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-
-      {/* 통계 카드 */}
-      <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>나의 기록</Text>
-        <View style={styles.statsGrid}>
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => navigation.navigate('MyDiary')}
-            activeOpacity={0.7}>
-            <View style={[styles.statIconContainer, {backgroundColor: colors.primary + '15'}]}>
-              <Ionicons name="book" size={24} color={colors.primary} />
-            </View>
-            <Text style={styles.statNumber}>{stats.myDiaryCount}</Text>
-            <Text style={styles.statLabel}>작성한 일기</Text>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.statCard}
-            onPress={() => navigation.navigate('ViewedDiary')}
-            activeOpacity={0.7}>
-            <View style={[styles.statIconContainer, {backgroundColor: colors.secondary + '15'}]}>
-              <Ionicons name="eye" size={24} color={colors.secondary} />
-            </View>
-            <Text style={styles.statNumber}>{stats.viewedDiaryCount}</Text>
-            <Text style={styles.statLabel}>읽은 일기</Text>
-          </TouchableOpacity>
-
-          <View style={styles.statCard}>
-            <View style={[styles.statIconContainer, {backgroundColor: colors.accent + '15'}]}>
-              <Ionicons name="globe" size={24} color={colors.accent} />
-            </View>
-            <Text style={styles.statNumber}>{stats.totalDiaryCount}</Text>
-            <Text style={styles.statLabel}>전체 일기</Text>
-          </View>
+          {/* 안내 문구 */}
+          <Text style={styles.disclaimer}>
+            🔒 모든 일기는 익명으로 안전하게 처리됩니다
+          </Text>
         </View>
-      </View>
-
-      {/* 안내 카드 */}
-      <View style={styles.infoContainer}>
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconContainer}>
-            <Ionicons name="swap-horizontal" size={24} color={colors.primary} />
-          </View>
-          <View style={styles.infoTextContainer}>
-            <Text style={styles.infoTitle}>일기 교환</Text>
-            <Text style={styles.infoDescription}>
-              일기를 작성하면 다른 사람의{'\n'}랜덤 일기를 볼 수 있어요
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.infoCard}>
-          <View style={styles.infoIconContainer}>
-            <Ionicons name="shield-checkmark" size={24} color={colors.success} />
-          </View>
-          <View style={styles.infoTextContainer}>
-            <Text style={styles.infoTitle}>완전한 익명</Text>
-            <Text style={styles.infoDescription}>
-              모든 일기는 익명으로 처리되어{'\n'}안전하게 공유됩니다
-            </Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
-    paddingBottom: spacing.xl,
+  scrollView: {
+    flex: 1,
   },
-  headerGradient: {
-    paddingTop: height * 0.08,
-    paddingBottom: spacing['2xl'],
+  scrollContent: {
+    flexGrow: 1,
+  },
+  gradientHeader: {
+    paddingTop: height * 0.06,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
     alignItems: 'center',
   },
   headerEmoji: {
-    fontSize: 56,
-    marginBottom: spacing.md,
+    fontSize: 48,
+    marginBottom: spacing.sm,
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '700',
     color: colors.surface,
     marginBottom: spacing.xs,
   },
   headerSubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.surface,
     opacity: 0.95,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
-  mainActionContainer: {
-    paddingHorizontal: spacing.lg,
-    marginTop: -spacing.xl,
-  },
-  writeButton: {
-    borderRadius: borderRadius.xl,
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-  },
-  writeButtonGradient: {
-    padding: spacing.lg,
-  },
-  writeButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  writeButtonIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  writeButtonTextContainer: {
+  content: {
     flex: 1,
-  },
-  writeButtonTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.surface,
-    marginBottom: 2,
-  },
-  writeButtonSubtitle: {
-    fontSize: 14,
-    color: colors.surface,
-    opacity: 0.9,
-  },
-  statsContainer: {
     paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
+  inputContainer: {
     marginBottom: spacing.md,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  statCard: {
-    flex: 1,
+  textInput: {
+    minHeight: 120,
+    maxHeight: 200,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     padding: spacing.md,
-    alignItems: 'center',
+    fontSize: 15,
+    color: colors.textPrimary,
     borderWidth: 1,
     borderColor: colors.border,
+    lineHeight: 24,
+    textAlignVertical: 'top',
   },
-  statIconContainer: {
-    width: 48,
-    height: 48,
+  submitButton: {
     borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
+    overflow: 'hidden',
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
   },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.textPrimary,
-    marginBottom: 2,
+  submitButtonDisabled: {
+    opacity: 1,
   },
-  statLabel: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    fontWeight: '500',
-  },
-  infoContainer: {
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-    gap: spacing.sm,
-  },
-  infoCard: {
+  submitGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    justifyContent: 'center',
+    paddingVertical: 16,
   },
-  infoIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.backgroundAlt,
+  loadingContainer: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
   },
-  infoTextContainer: {
-    flex: 1,
+  submitIcon: {
+    marginRight: spacing.sm,
   },
-  infoTitle: {
+  submitButtonText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: colors.textPrimary,
-    marginBottom: 4,
+    fontWeight: '600',
+    color: colors.surface,
   },
-  infoDescription: {
+  disclaimer: {
     fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
 });
+

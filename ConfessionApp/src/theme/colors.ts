@@ -2,11 +2,57 @@
  * 앱 전체 컬러 시스템
  * 
  * 미니멀하고 고급스러운 디자인을 위한 컬러 팔레트
- * 화이트/그레이 베이스 + 세련된 블루-퍼플 포인트 컬러
+ * 다양한 테마 지원 (Light, Dark, Ocean, Sunset, Forest, Purple Dream)
  */
 
+// 공통 타입 정의
+export type ColorScheme = {
+  primary: string;
+  primaryLight: string;
+  primaryDark: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  backgroundAlt: string;
+  surface: string;
+  textPrimary: string;
+  textSecondary: string;
+  textTertiary: string;
+  textDisabled: string;
+  border: string;
+  borderLight: string;
+  borderDark: string;
+  success: string;
+  warning: string;
+  error: string;
+  info: string;
+  gradientStart: string;
+  gradientEnd: string;
+  overlay: string;
+  overlayLight: string;
+  editorColors: {
+    red: string;
+    orange: string;
+    yellow: string;
+    green: string;
+    blue: string;
+    purple: string;
+    pink: string;
+  };
+  moodColors: {
+    happy: string;
+    sad: string;
+    angry: string;
+    tired: string;
+    love: string;
+    surprised: string;
+    calm: string;
+    excited: string;
+  };
+};
+
 // 라이트 모드 컬러
-export const lightColors = {
+export const lightColors: ColorScheme = {
   // Primary Colors
   primary: '#5B5FEF',           // 메인 포인트 컬러 (세련된 블루)
   primaryLight: '#7C7FF5',      // 밝은 버전
@@ -133,7 +179,203 @@ export const darkColors = {
     calm: '#6EE7B7',
     excited: '#FB923C',
   },
+};
+
+// Ocean 테마 (바다 - 청량한 블루)
+export const oceanColors: ColorScheme = {
+  primary: '#0EA5E9',
+  primaryLight: '#38BDF8',
+  primaryDark: '#0284C7',
+  secondary: '#06B6D4',
+  accent: '#14B8A6',
+  background: '#F0F9FF',
+  backgroundAlt: '#E0F2FE',
+  surface: '#FFFFFF',
+  textPrimary: '#0C4A6E',
+  textSecondary: '#475569',
+  textTertiary: '#64748B',
+  textDisabled: '#CBD5E1',
+  border: '#BAE6FD',
+  borderLight: '#E0F2FE',
+  borderDark: '#7DD3FC',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#3B82F6',
+  gradientStart: '#0EA5E9',
+  gradientEnd: '#06B6D4',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
+  editorColors: {
+    red: '#EF4444',
+    orange: '#F97316',
+    yellow: '#F59E0B',
+    green: '#10B981',
+    blue: '#0EA5E9',
+    purple: '#8B5CF6',
+    pink: '#EC4899',
+  },
+  moodColors: {
+    happy: '#FCD34D',
+    sad: '#38BDF8',
+    angry: '#F87171',
+    tired: '#A78BFA',
+    love: '#F472B6',
+    surprised: '#FBBF24',
+    calm: '#6EE7B7',
+    excited: '#FB923C',
+  },
+};
+
+// Sunset 테마 (일몰 - 따뜻한 오렌지/핑크)
+export const sunsetColors: ColorScheme = {
+  primary: '#F97316',
+  primaryLight: '#FB923C',
+  primaryDark: '#EA580C',
+  secondary: '#EC4899',
+  accent: '#F43F5E',
+  background: '#FFF7ED',
+  backgroundAlt: '#FFEDD5',
+  surface: '#FFFFFF',
+  textPrimary: '#7C2D12',
+  textSecondary: '#78350F',
+  textTertiary: '#92400E',
+  textDisabled: '#FED7AA',
+  border: '#FED7AA',
+  borderLight: '#FFEDD5',
+  borderDark: '#FDBA74',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#3B82F6',
+  gradientStart: '#F97316',
+  gradientEnd: '#EC4899',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
+  editorColors: {
+    red: '#EF4444',
+    orange: '#F97316',
+    yellow: '#F59E0B',
+    green: '#10B981',
+    blue: '#3B82F6',
+    purple: '#8B5CF6',
+    pink: '#EC4899',
+  },
+  moodColors: {
+    happy: '#FCD34D',
+    sad: '#60A5FA',
+    angry: '#F87171',
+    tired: '#A78BFA',
+    love: '#F472B6',
+    surprised: '#FBBF24',
+    calm: '#6EE7B7',
+    excited: '#FB923C',
+  },
+};
+
+// Forest 테마 (숲 - 자연스러운 그린)
+export const forestColors: ColorScheme = {
+  primary: '#10B981',
+  primaryLight: '#34D399',
+  primaryDark: '#059669',
+  secondary: '#14B8A6',
+  accent: '#84CC16',
+  background: '#F0FDF4',
+  backgroundAlt: '#DCFCE7',
+  surface: '#FFFFFF',
+  textPrimary: '#064E3B',
+  textSecondary: '#065F46',
+  textTertiary: '#047857',
+  textDisabled: '#BBF7D0',
+  border: '#BBF7D0',
+  borderLight: '#DCFCE7',
+  borderDark: '#86EFAC',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#3B82F6',
+  gradientStart: '#10B981',
+  gradientEnd: '#14B8A6',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
+  editorColors: {
+    red: '#EF4444',
+    orange: '#F97316',
+    yellow: '#F59E0B',
+    green: '#10B981',
+    blue: '#3B82F6',
+    purple: '#8B5CF6',
+    pink: '#EC4899',
+  },
+  moodColors: {
+    happy: '#FCD34D',
+    sad: '#60A5FA',
+    angry: '#F87171',
+    tired: '#A78BFA',
+    love: '#F472B6',
+    surprised: '#FBBF24',
+    calm: '#6EE7B7',
+    excited: '#FB923C',
+  },
+};
+
+// Purple Dream 테마 (몽환적인 보라)
+export const purpleColors: ColorScheme = {
+  primary: '#A855F7',
+  primaryLight: '#C084FC',
+  primaryDark: '#9333EA',
+  secondary: '#EC4899',
+  accent: '#F472B6',
+  background: '#FAF5FF',
+  backgroundAlt: '#F3E8FF',
+  surface: '#FFFFFF',
+  textPrimary: '#581C87',
+  textSecondary: '#6B21A8',
+  textTertiary: '#7E22CE',
+  textDisabled: '#E9D5FF',
+  border: '#E9D5FF',
+  borderLight: '#F3E8FF',
+  borderDark: '#D8B4FE',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#3B82F6',
+  gradientStart: '#A855F7',
+  gradientEnd: '#EC4899',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlayLight: 'rgba(0, 0, 0, 0.3)',
+  editorColors: {
+    red: '#EF4444',
+    orange: '#F97316',
+    yellow: '#F59E0B',
+    green: '#10B981',
+    blue: '#3B82F6',
+    purple: '#A855F7',
+    pink: '#EC4899',
+  },
+  moodColors: {
+    happy: '#FCD34D',
+    sad: '#60A5FA',
+    angry: '#F87171',
+    tired: '#A78BFA',
+    love: '#F472B6',
+    surprised: '#FBBF24',
+    calm: '#6EE7B7',
+    excited: '#FB923C',
+  },
+};
+
+// 모든 테마 export
+export const themes = {
+  light: lightColors,
+  dark: darkColors,
+  ocean: oceanColors,
+  sunset: sunsetColors,
+  forest: forestColors,
+  purple: purpleColors,
 } as const;
+
+export type ThemeName = keyof typeof themes;
 
 // 기본 export (라이트 모드)
 export const colors = lightColors;

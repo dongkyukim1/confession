@@ -6,7 +6,9 @@
 import React from 'react';
 import {View, Text, StyleSheet, Dimensions} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import {colors, typography, spacing} from '../theme';
+import {typography, spacing} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 interface GradientHeaderProps {
   title: string;
@@ -21,6 +23,9 @@ export default function GradientHeader({
   subtitle,
   emoji,
 }: GradientHeaderProps) {
+  const {colors} = useTheme();
+  const styles = getStyles(colors);
+
   return (
     <LinearGradient
       colors={[colors.gradientStart, colors.gradientEnd]}
@@ -36,7 +41,7 @@ export default function GradientHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   gradient: {
     width: '100%',
     paddingTop: 60,
@@ -62,5 +67,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
+
 
 

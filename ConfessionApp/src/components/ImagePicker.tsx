@@ -1,183 +1,135 @@
 /**
  * 이미지 선택 컴포넌트
- * 
- * 갤러리/카메라에서 이미지를 선택하고 미리보기
+ *
+ * 일기에 사진을 첨부하는 UI (Placeholder 버전)
+ * 실제 이미지 선택은 react-native-image-picker 등을 사용해야 함
  */
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
-import {launchImageLibrary, launchCamera, Asset} from 'react-native-image-picker';
+import {View, Text, TouchableOpacity, StyleSheet, Image, ScrollView} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, spacing, borderRadius} from '../theme';
+import {spacing, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
-interface ImagePickerProps {
+type ImagePickerProps = {
   images: string[];
   onImagesChange: (images: string[]) => void;
   maxImages?: number;
-}
+};
 
 export default function ImagePickerComponent({
   images,
   onImagesChange,
   maxImages = 3,
 }: ImagePickerProps) {
-  const handleSelectImage = async (fromCamera: boolean = false) => {
-    if (images.length >= maxImages) {
-      Alert.alert('알림', `최대 ${maxImages}장까지 첨부할 수 있습니다.`);
-      return;
-    }
-
-    try {
-      const options = {
-        mediaType: 'photo' as const,
-        quality: 0.8 as const,
-        maxWidth: 1920,
-        maxHeight: 1920,
-      };
-
-      const result = fromCamera
-        ? await launchCamera(options)
-        : await launchImageLibrary(options);
-
-      if (result.didCancel || !result.assets || result.assets.length === 0) {
-        return;
-      }
-
-      const asset = result.assets[0];
-      if (asset.uri) {
-        // 실제 구현에서는 여기서 Cloudinary나 Supabase Storage에 업로드
-        // 현재는 로컬 URI를 임시로 저장
-        onImagesChange([...images, asset.uri]);
-      }
-    } catch (error) {
-      console.error('이미지 선택 오류:', error);
-      Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
-    }
+  const {colors} = useTheme();
+  const handleAddImage = () => {
+    // TODO: 실제 이미지 선택 로직 구현
+    // react-native-image-picker 또는 expo-image-picker 사용
+    console.log('이미지 선택 기능은 추후 구현 예정');
   };
 
-  const removeImage = (index: number) => {
+  const handleRemoveImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
   };
 
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>사진 첨부 (최대 {maxImages}장)</Text>
+      <View style={styles.header}>
+        <Text style={styles.label}>사진 첨부</Text>
+        <Text style={styles.counter}>
+          {images.length}/{maxImages}
+        </Text>
+      </View>
 
-      <View style={styles.contentWrapper}>
-        {/* 이미지가 있으면 미리보기 표시 */}
-        {images.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.imagesContainer}>
-            {images.map((uri, index) => (
-              <View key={index} style={styles.imageContainer}>
-                <Image source={{uri}} style={styles.image} />
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => removeImage(index)}>
-                  <Ionicons name="close-circle" size={22} color={colors.surface} />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </ScrollView>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}>
+        {/* 이미지 추가 버튼 */}
+        {images.length < maxImages && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={handleAddImage}
+            activeOpacity={0.7}>
+            <Ionicons name="camera-outline" size={28} color={colors.textTertiary} />
+            <Text style={styles.addButtonText}>사진 추가</Text>
+          </TouchableOpacity>
         )}
 
-        {/* 이미지 추가 버튼 - 항상 2개 균등 배치 */}
-        {images.length < maxImages && (
-          <View style={styles.buttonsContainer}>
+        {/* 선택된 이미지들 */}
+        {images.map((uri, index) => (
+          <View key={index} style={styles.imageContainer}>
+            <Image source={{uri}} style={styles.image} />
             <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => handleSelectImage(false)}
-              activeOpacity={0.7}>
-              <Ionicons name="images-outline" size={28} color={colors.primary} />
-              <Text style={styles.addButtonText}>갤러리</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => handleSelectImage(true)}
-              activeOpacity={0.7}>
-              <Ionicons name="camera-outline" size={28} color={colors.primary} />
-              <Text style={styles.addButtonText}>카메라</Text>
+              style={styles.removeButton}
+              onPress={() => handleRemoveImage(index)}
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+              <Ionicons name="close-circle" size={22} color={colors.error} />
             </TouchableOpacity>
           </View>
-        )}
-      </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     marginBottom: spacing.md,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
   },
-  contentWrapper: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
+  counter: {
+    fontSize: 12,
+    color: colors.textTertiary,
   },
-  imagesContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  imageContainer: {
-    position: 'relative',
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.sm,
-    overflow: 'hidden',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: colors.backgroundAlt,
-  },
-  removeButton: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: borderRadius.full,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
+  scrollContent: {
     gap: spacing.sm,
   },
   addButton: {
-    flex: 1,
-    height: 72,
+    width: 100,
+    height: 100,
     backgroundColor: colors.backgroundAlt,
-    borderRadius: borderRadius.sm,
+    borderRadius: borderRadius.md,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderStyle: 'dashed',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     gap: 4,
   },
   addButtonText: {
     fontSize: 12,
-    color: colors.textSecondary,
-    fontWeight: '500',
+    color: colors.textTertiary,
+    marginTop: 4,
+  },
+  imageContainer: {
+    position: 'relative',
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundAlt,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
   },
 });
-
-

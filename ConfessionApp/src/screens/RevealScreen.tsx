@@ -18,10 +18,15 @@ import {
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList, Confession} from '../types';
+import {LikeType, ReportReason} from '../types/database';
 import {supabase} from '../lib/supabase';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
+import {LikeDislikeButtons} from '../components/features/LikeDislikeButtons';
+import {ReportModal} from '../components/features/ReportModal';
 
 type RevealScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Reveal'>;
@@ -35,6 +40,18 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   const [confession, setConfession] = useState<Confession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRevealed, setIsRevealed] = useState(false);
+  const {colors} = useTheme();
+  
+  // 좋아요/싫어요 상태
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
+  const [userLikeType, setUserLikeType] = useState<LikeType | null>(null);
+  
+  // 신고 상태
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [isReported, setIsReported] = useState(false);
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
 
   // 애니메이션 값
   const flipAnim = useRef(new Animated.Value(0)).current;
@@ -42,14 +59,22 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
   useEffect(() => {
-    fetchConfession();
+    init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confessionId]);
+  
+  const init = async () => {
+    const id = await import('../utils/deviceId').then(m => 
+      m.getOrCreateDeviceId()
+    );
+    setDeviceId(id);
+    await fetchConfession(id);
+  };
 
   /**
    * 고해성사 데이터 가져오기
    */
-  const fetchConfession = async () => {
+  const fetchConfession = async (id: string) => {
     try {
       const {data, error} = await supabase
         .from('confessions')
@@ -62,6 +87,8 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
       }
 
       setConfession(data);
+      setLikeCount(data.like_count || 0);
+      setDislikeCount(data.dislike_count || 0);
 
       // 조회수 증가
       await supabase
@@ -70,20 +97,38 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         .eq('id', confessionId);
 
       // viewed_confessions 테이블에 기록 추가
-      const deviceId = await import('../utils/deviceId').then(m => 
-        m.getOrCreateDeviceId()
-      );
-      
-      if (deviceId) {
+      if (id) {
         await supabase
           .from('viewed_confessions')
           .upsert({
-            device_id: deviceId,
+            device_id: id,
             confession_id: confessionId,
             viewed_at: new Date().toISOString(),
           }, {
             onConflict: 'device_id,confession_id',
           });
+          
+        // Check user's like/dislike
+        const {data: likeData} = await supabase
+          .from('likes')
+          .select('like_type')
+          .eq('confession_id', confessionId)
+          .eq('device_id', id)
+          .single();
+
+        if (likeData) {
+          setUserLikeType(likeData.like_type);
+        }
+        
+        // Check if user has reported
+        const {data: reportData} = await supabase
+          .from('reports')
+          .select('id')
+          .eq('confession_id', confessionId)
+          .eq('device_id', id)
+          .single();
+
+        setIsReported(!!reportData);
       }
 
       // 로딩 완료 후 애니메이션 시작
@@ -164,11 +209,105 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
     if (days < 7) return `${days}일 전`;
     return date.toLocaleDateString('ko-KR');
   };
+  
+  const handleLike = async () => {
+    if (!deviceId) return;
+
+    try {
+      if (userLikeType === 'like') {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('device_id', deviceId);
+
+        setUserLikeType(null);
+        setLikeCount(prev => Math.max(prev - 1, 0));
+      } else {
+        await supabase
+          .from('likes')
+          .upsert({
+            device_id: deviceId,
+            confession_id: confessionId,
+            like_type: 'like',
+          }, {
+            onConflict: 'device_id,confession_id',
+          });
+
+        const wasDisliked = userLikeType === 'dislike';
+        setUserLikeType('like');
+        setLikeCount(prev => prev + 1);
+        if (wasDisliked) {
+          setDislikeCount(prev => Math.max(prev - 1, 0));
+        }
+      }
+    } catch (error) {
+      console.error('Like error:', error);
+    }
+  };
+
+  const handleDislike = async () => {
+    if (!deviceId) return;
+
+    try {
+      if (userLikeType === 'dislike') {
+        await supabase
+          .from('likes')
+          .delete()
+          .eq('confession_id', confessionId)
+          .eq('device_id', deviceId);
+
+        setUserLikeType(null);
+        setDislikeCount(prev => Math.max(prev - 1, 0));
+      } else {
+        await supabase
+          .from('likes')
+          .upsert({
+            device_id: deviceId,
+            confession_id: confessionId,
+            like_type: 'dislike',
+          }, {
+            onConflict: 'device_id,confession_id',
+          });
+
+        const wasLiked = userLikeType === 'like';
+        setUserLikeType('dislike');
+        setDislikeCount(prev => prev + 1);
+        if (wasLiked) {
+          setLikeCount(prev => Math.max(prev - 1, 0));
+        }
+      }
+    } catch (error) {
+      console.error('Dislike error:', error);
+    }
+  };
+
+  const handleReport = async (reason: ReportReason, description?: string) => {
+    if (!deviceId || isReported) return;
+
+    setIsSubmittingReport(true);
+    try {
+      await supabase.from('reports').insert({
+        device_id: deviceId,
+        confession_id: confessionId,
+        reason,
+        description,
+      });
+
+      setIsReported(true);
+    } catch (error) {
+      console.error('Report error:', error);
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  const styles = getStyles(colors);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>다른 사람의 하루를 찾는 중...</Text>
       </View>
     );
@@ -262,9 +401,45 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         </Animated.View>
       </Animated.View>
 
-      {/* 하단 버튼 */}
+      {/* 하단 액션 버튼들 */}
       {isRevealed && (
         <Animated.View style={[styles.bottomSection, {opacity: fadeAnim}]}>
+          {/* 좋아요/싫어요 & 신고 */}
+          <View style={styles.actionsRow}>
+            <LikeDislikeButtons
+              likeCount={likeCount}
+              dislikeCount={dislikeCount}
+              userLikeType={userLikeType}
+              onLike={handleLike}
+              onDislike={handleDislike}
+            />
+            
+            {/* 신고 버튼 */}
+            <TouchableOpacity
+              onPress={() => setReportModalVisible(true)}
+              disabled={isReported}
+              style={[
+                styles.reportButton,
+                {
+                  opacity: isReported ? 0.5 : 1,
+                },
+              ]}
+              activeOpacity={0.7}>
+              <Ionicons
+                name="flag"
+                size={20}
+                color={isReported ? colors.textTertiary : colors.error}
+              />
+              <Text style={[
+                styles.reportButtonText,
+                {color: isReported ? colors.textTertiary : colors.error}
+              ]}>
+                {isReported ? '신고됨' : '신고'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* 일기 쓰기 버튼 */}
           <TouchableOpacity
             style={styles.writeButton}
             onPress={() => navigation.navigate('MainTabs')}
@@ -279,11 +454,19 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
           </TouchableOpacity>
         </Animated.View>
       )}
+      
+      {/* 신고 모달 */}
+      <ReportModal
+        visible={reportModalVisible}
+        onClose={() => setReportModalVisible(false)}
+        onSubmit={handleReport}
+        isSubmitting={isSubmittingReport}
+      />
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -456,6 +639,29 @@ const styles = StyleSheet.create({
     bottom: height * 0.08,
     width: '100%',
     paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...shadows.small,
+  },
+  reportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
+  },
+  reportButtonText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
   },
   writeButton: {
     borderRadius: borderRadius.md,

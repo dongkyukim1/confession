@@ -5,7 +5,9 @@
  */
 import React from 'react';
 import {View, Text, StyleSheet, ViewStyle} from 'react-native';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 interface StatCardProps {
   icon: string;
@@ -19,19 +21,23 @@ export default function StatCard({
   icon,
   value,
   label,
-  color = colors.primary,
+  color,
   style,
 }: StatCardProps) {
+  const {colors} = useTheme();
+  const displayColor = color || colors.primary;
+  const styles = getStyles(colors);
+
   return (
     <View style={[styles.card, style]}>
       <Text style={styles.icon}>{icon}</Text>
-      <Text style={[styles.value, {color}]}>{value}</Text>
+      <Text style={[styles.value, {color: displayColor}]}>{value}</Text>
       <Text style={styles.label}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -56,5 +62,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
 });
+
+
 
 

@@ -22,7 +22,9 @@ import {
 } from 'react-native';
 import SuccessAnimation from './SuccessAnimation';
 import {lightHaptic, successHaptic, errorHaptic} from '../utils/haptics';
-import {colors, typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, shadows, borderRadius} from '../theme';
+import {lightColors} from '../theme/colors';
+import {useTheme} from '../contexts/ThemeContext';
 
 const {height, width} = Dimensions.get('window');
 
@@ -56,6 +58,7 @@ export default function CustomModal({
   showSuccessAnimation = false,
 }: CustomModalProps) {
   const [showAnimation, setShowAnimation] = useState(false);
+  const {colors} = useTheme();
   
   // 애니메이션 값
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -174,6 +177,8 @@ export default function CustomModal({
     }
   };
 
+  const styles = getStyles(colors);
+
   const opacity = fadeAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 1],
@@ -282,7 +287,7 @@ export default function CustomModal({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',

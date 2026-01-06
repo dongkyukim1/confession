@@ -13,6 +13,11 @@ export interface Confession {
   mood?: string | null;           // 기분 이모지
   images?: string[] | null;       // 이미지 URL 배열
   tags?: string[] | null;         // 태그 배열
+  
+  // 좋아요/싫어요/신고 카운트
+  like_count?: number;            // 좋아요 수
+  dislike_count?: number;         // 싫어요 수
+  report_count?: number;          // 신고 수
 }
 
 export type ConfessionInsert = {
@@ -33,6 +38,44 @@ export type ConfessionUpdate = {
   tags?: string[] | null;
 };
 
+// 좋아요/싫어요 타입
+export type LikeType = 'like' | 'dislike';
+
+export interface Like {
+  id: string;
+  device_id: string;
+  confession_id: string;
+  like_type: LikeType;
+  created_at: string;
+}
+
+export type LikeInsert = {
+  device_id: string;
+  confession_id: string;
+  like_type: LikeType;
+};
+
+// 신고 타입
+export type ReportReason = 'offensive' | 'sexual' | 'spam' | 'violence' | 'other';
+export type ReportStatus = 'pending' | 'reviewed' | 'resolved';
+
+export interface Report {
+  id: string;
+  device_id: string;
+  confession_id: string;
+  reason: ReportReason;
+  description?: string | null;
+  status: ReportStatus;
+  created_at: string;
+}
+
+export type ReportInsert = {
+  device_id: string;
+  confession_id: string;
+  reason: ReportReason;
+  description?: string | null;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -40,6 +83,16 @@ export interface Database {
         Row: Confession;
         Insert: ConfessionInsert;
         Update: ConfessionUpdate;
+      };
+      likes: {
+        Row: Like;
+        Insert: LikeInsert;
+        Update: Partial<LikeInsert>;
+      };
+      reports: {
+        Row: Report;
+        Insert: ReportInsert;
+        Update: Partial<ReportInsert>;
       };
     };
     Views: {

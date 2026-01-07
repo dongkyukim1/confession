@@ -15,6 +15,8 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Modal,
+  Dimensions,
 } from 'react-native';
 import {launchImageLibrary, ImageLibraryOptions, Asset} from 'react-native-image-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -36,6 +38,7 @@ export default function ImagePickerComponent({
 }: ImagePickerProps) {
   const {colors} = useTheme();
   const [uploading, setUploading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   /**
    * 이미지 선택 및 Supabase Storage 업로드
@@ -47,6 +50,7 @@ export default function ImagePickerComponent({
       maxWidth: 1200,
       maxHeight: 1200,
       selectionLimit: maxImages - images.length,
+      includeBase64: true, // base64 인코딩 포함
     };
 
     try {
@@ -87,6 +91,7 @@ export default function ImagePickerComponent({
 
   /**
    * Supabase Storage에 이미지 업로드
+   * React Native에서는 base64로 인코딩하여 업로드
    */
   const uploadImageToSupabase = async (asset: Asset): Promise<string | null> => {
     try {
@@ -101,20 +106,49 @@ export default function ImagePickerComponent({
       const fileName = `${timestamp}_${random}.${fileExt}`;
       const filePath = `uploads/${fileName}`;
 
-      // FormData로 파일 업로드 준비
-      const formData = new FormData();
-      formData.append('file', {
-        uri: Platform.OS === 'ios' ? asset.uri.replace('file://', '') : asset.uri,
-        type: asset.type || 'image/jpeg',
-        name: fileName,
-      } as any);
+      // base64 문자열로 변환
+      // react-native-image-picker는 base64를 직접 제공하지 않으므로
+      // FileReader로 읽어서 변환
+      let base64Data: string;
+      
+      if (asset.base64) {
+        // base64가 있으면 사용
+        base64Data = asset.base64;
+      } else {
+        // base64가 없으면 URI에서 읽기
+        const response = await fetch(asset.uri);
+        const blob = await response.blob();
+        
+        base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+              // data:image/jpeg;base64,... 형식에서 base64 부분만 추출
+              const base64 = reader.result.split(',')[1];
+              resolve(base64);
+            } else {
+              reject(new Error('Failed to read file as base64'));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      // base64를 ArrayBuffer로 변환
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
 
       // Supabase Storage에 업로드
       const {data, error} = await supabase.storage
         .from('confession-images')
-        .upload(filePath, formData, {
+        .upload(filePath, bytes.buffer, {
           contentType: asset.type || 'image/jpeg',
           cacheControl: '3600',
+          upsert: false,
         });
 
       if (error) {
@@ -131,6 +165,7 @@ export default function ImagePickerComponent({
       return publicUrl;
     } catch (error) {
       console.error('이미지 업로드 오류:', error);
+      Alert.alert('오류', '이미지를 업로드하는 중 문제가 발생했습니다.');
       return null;
     }
   };
@@ -178,11 +213,15 @@ export default function ImagePickerComponent({
         {/* 선택된 이미지들 */}
         {images.map((uri, index) => (
           <View key={index} style={styles.imageContainer}>
-            <Image 
-              source={{uri}} 
-              style={styles.image}
-              resizeMode="cover"
-            />
+            <TouchableOpacity
+              onPress={() => setSelectedImage(uri)}
+              activeOpacity={0.8}>
+              <Image 
+                source={{uri}} 
+                style={styles.image}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
             <TouchableOpacity
               style={styles.removeButton}
               onPress={() => handleRemoveImage(index)}
@@ -198,6 +237,41 @@ export default function ImagePickerComponent({
           💡 사진을 터치하여 크게 볼 수 있습니다
         </Text>
       )}
+
+      {/* 이미지 확대 Modal */}
+      <Modal
+        visible={selectedImage !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSelectedImage(null)}>
+        <View style={styles.modalContainer}>
+          {/* 배경 터치로 닫기 */}
+          <TouchableOpacity
+            style={styles.modalBackground}
+            activeOpacity={1}
+            onPress={() => setSelectedImage(null)}
+          />
+          
+          {/* 확대된 이미지 */}
+          {selectedImage && (
+            <View style={styles.modalContent}>
+              <Image
+                source={{uri: selectedImage}}
+                style={styles.fullImage}
+                resizeMode="contain"
+              />
+              
+              {/* 닫기 버튼 */}
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setSelectedImage(null)}
+                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                <Ionicons name="close" size={30} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -278,5 +352,36 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     color: colors.textTertiary,
     marginTop: spacing.xs,
     textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  },
+  modalContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: borderRadius.full,
+    padding: 8,
   },
 });

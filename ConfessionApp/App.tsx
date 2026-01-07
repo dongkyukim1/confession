@@ -4,7 +4,9 @@
  * 사용자가 고백을 작성하면 다른 사람의 랜덤 고백을 볼 수 있는 앱
  */
 import React, {useEffect} from 'react';
-import {StatusBar, ImageBackground, StyleSheet, Text, TextInput} from 'react-native';
+import {StatusBar, ImageBackground, StyleSheet} from 'react-native';
+// @ts-ignore
+import {setCustomText, setCustomTextInput} from 'react-native-global-props';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer, DefaultTheme, DarkTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -27,6 +29,16 @@ import {ThemeProvider, useTheme} from './src/contexts/ThemeContext';
 import {FontProvider, useFont} from './src/contexts/FontContext';
 import {typography} from './src/theme';
 import {BACKGROUNDS} from './src/constants/assets';
+
+// 전역 변수 타입 선언
+declare global {
+  var __GLOBAL_FONT_FAMILY__: string | undefined;
+}
+
+// globalThis에도 타입 추가
+interface GlobalThisWithFont {
+  __GLOBAL_FONT_FAMILY__?: string;
+}
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<BottomTabParamList>();
@@ -134,25 +146,35 @@ function MainTabs() {
  */
 function AppContent() {
   const {isDark, colors} = useTheme();
-  const {selectedFont, fontOption} = useFont();
+  const {fontOption} = useFont();
 
   // 전역 폰트 설정 - 폰트 변경 시마다 업데이트
   useEffect(() => {
     const fontFamily = fontOption.fontFamily;
     
-    // Text 컴포넌트 기본 폰트 설정
-    if (Text.defaultProps) {
-      Text.defaultProps.style = { fontFamily };
+    // 글로벌 변수 업데이트 (fontPatch.js에서 사용)
+    const globalWithFont = globalThis as unknown as GlobalThisWithFont;
+    if (globalWithFont.__GLOBAL_FONT_FAMILY__ !== undefined) {
+      globalWithFont.__GLOBAL_FONT_FAMILY__ = fontFamily;
     }
     
-    // TextInput 컴포넌트 기본 폰트 설정
-    if (TextInput.defaultProps) {
-      TextInput.defaultProps.style = { fontFamily };
-    }
+    // react-native-global-props로 전역 폰트 설정
+    setCustomText({
+      style: {
+        fontFamily: fontFamily,
+      }
+    });
+    
+    setCustomTextInput({
+      style: {
+        fontFamily: fontFamily,
+      }
+    });
     
     // 로그
     console.log('✅ 전역 폰트 변경:', fontOption.displayName, '→', fontFamily);
-  }, [selectedFont, fontOption]);
+    console.log('   global.__GLOBAL_FONT_FAMILY__ =', globalWithFont.__GLOBAL_FONT_FAMILY__);
+  }, [fontOption]);
 
   // 테마에 따른 Navigation 테마 생성
   const navigationTheme = isDark
@@ -179,21 +201,29 @@ function AppContent() {
         },
       };
 
+  const {selectedFont} = useFont();
+
   return (
     <>
       <StatusBar
         barStyle={isDark ? 'light-content' : 'dark-content'}
         backgroundColor={colors.background}
       />
-      <NavigationContainer theme={navigationTheme}>
+      <NavigationContainer key={`nav-${selectedFont}`} theme={navigationTheme}>
         <Stack.Navigator
+          key={`stack-${selectedFont}`}
           screenOptions={{
             headerShown: false,
             animation: 'fade',
             contentStyle: {backgroundColor: 'transparent'}, // 투명하게!
           }}>
-          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen 
+            key={`main-${selectedFont}`}
+            name="MainTabs" 
+            component={MainTabs}
+          />
           <Stack.Screen
+            key={`write-${selectedFont}`}
             name="Write"
             component={WriteScreen}
             options={{
@@ -202,6 +232,7 @@ function AppContent() {
             }}
           />
           <Stack.Screen
+            key={`reveal-${selectedFont}`}
             name="Reveal"
             component={RevealScreen}
             options={{
@@ -210,6 +241,7 @@ function AppContent() {
             }}
           />
           <Stack.Screen
+            key={`animation-${selectedFont}`}
             name="AnimationShowcase"
             component={AnimationShowcase}
             options={{
@@ -219,6 +251,7 @@ function AppContent() {
             }}
           />
           <Stack.Screen
+            key={`icon-${selectedFont}`}
             name="IconShowcase"
             component={IconShowcase}
             options={{
@@ -235,12 +268,24 @@ function AppContent() {
 
 function AppWrapper() {
   const {selectedFont, fontOption} = useFont();
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
   
-  // 폰트 변경 시 전체 앱 리렌더링 (key 변경으로 강제 리마운트)
-  // 콘솔 로그로 확인
-  console.log('🎨 AppWrapper 렌더링, 현재 폰트:', fontOption.displayName);
+  // 폰트 변경 시 전체 앱 강제 리렌더링
+  React.useEffect(() => {
+    console.log('🎨 폰트 변경 감지:', fontOption.displayName);
+    console.log('🔄 0.5초 후 앱 전체 리렌더링...');
+    
+    // 짧은 딜레이 후 강제 리렌더링
+    const timer = setTimeout(() => {
+      forceUpdate();
+      console.log('✅ 앱 리렌더링 완료');
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [selectedFont, fontOption]);
   
-  return <AppContent key={selectedFont} />;
+  // 폰트 변경 시 완전히 새로운 AppContent 생성
+  return <AppContent key={`app-${selectedFont}`} />;
 }
 
 function App() {

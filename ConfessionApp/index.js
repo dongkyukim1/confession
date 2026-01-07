@@ -2,23 +2,27 @@
  * @format
  */
 
-import { AppRegistry, Text, TextInput } from 'react-native';
+import { AppRegistry } from 'react-native';
+import { setCustomText, setCustomTextInput } from 'react-native-global-props';
 import App from './App';
 import { name as appName } from './app.json';
 
-// 전역 폰트 설정을 위한 Text/TextInput 기본 속성 설정
-const defaultFontFamily = 'Roboto'; // Android 기본 폰트
+// 전역 폰트 변수 초기화
+global.__GLOBAL_FONT_FAMILY__ = 'Roboto';
 
-// Text 기본 속성
-if (Text.defaultProps == null) {
-  Text.defaultProps = {};
-}
-Text.defaultProps.style = { fontFamily: defaultFontFamily };
+// 초기 전역 폰트 설정
+setCustomText({
+  style: {
+    fontFamily: 'Roboto',
+  }
+});
 
-// TextInput 기본 속성
-if (TextInput.defaultProps == null) {
-  TextInput.defaultProps = {};
-}
-TextInput.defaultProps.style = { fontFamily: defaultFontFamily };
+setCustomTextInput({
+  style: {
+    fontFamily: 'Roboto',
+  }
+});
+
+console.log('✅ 전역 폰트 초기화 완료');
 
 AppRegistry.registerComponent(appName, () => App);

@@ -25,6 +25,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
+import {useAchievementChecker} from '../hooks/useAchievementChecker';
+import AchievementModal from '../components/AchievementModal';
 
 export default function MyDiaryScreen() {
   const [confessions, setConfessions] = useState<Confession[]>([]);
@@ -36,6 +38,14 @@ export default function MyDiaryScreen() {
   const [allTags, setAllTags] = useState<string[]>([]);
   const {showModal} = useModal();
   const {colors} = useTheme();
+  
+  // 업적 시스템
+  const {
+    checkForNewAchievements,
+    currentAchievement,
+    hideAchievement,
+    isModalVisible,
+  } = useAchievementChecker();
 
   useEffect(() => {
     const init = async () => {
@@ -43,6 +53,8 @@ export default function MyDiaryScreen() {
       setDeviceId(id);
       if (id) {
         await fetchMyConfessions(id);
+        // 미확인 업적 체크
+        await checkForNewAchievements(id);
       }
       setIsLoading(false);
     };
@@ -265,6 +277,15 @@ export default function MyDiaryScreen() {
             카드를 길게 눌러서 삭제할 수 있습니다
           </Text>
         </View>
+      )}
+      
+      {/* 업적 모달 */}
+      {currentAchievement && (
+        <AchievementModal
+          visible={isModalVisible}
+          achievementType={currentAchievement.achievement_type}
+          onClose={hideAchievement}
+        />
       )}
     </View>
   );

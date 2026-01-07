@@ -4,7 +4,7 @@
  * 미니멀하고 세련된 디자인의 일기 카드
  * 리치 컨텐츠 표시 지원 (이미지, 서식, 기분 배지)
  */
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,9 @@ import {
   Image,
   ScrollView,
   Animated,
+  Modal,
 } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
@@ -45,6 +47,9 @@ export default function ConfessionCard({
   index = 0,
 }: ConfessionCardProps) {
   const {colors} = useTheme();
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
   /**
    * 시간 포맷팅
    */
@@ -80,7 +85,19 @@ export default function ConfessionCard({
           style={styles.imagesGallery}
           contentContainerStyle={styles.imagesContent}>
           {images.map((uri, idx) => (
-            <Image key={idx} source={{uri}} style={styles.galleryImage} />
+            <TouchableOpacity
+              key={idx}
+              onPress={() => {
+                setSelectedImageIndex(idx);
+                setImageModalVisible(true);
+              }}
+              activeOpacity={0.8}>
+              <Image 
+                source={{uri}} 
+                style={styles.galleryImage}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
           ))}
         </ScrollView>
       )}
@@ -122,15 +139,91 @@ export default function ConfessionCard({
     </View>
   );
 
+  const Content = (
+    <>
+      {CardContent}
+      
+      {/* 이미지 확대 모달 */}
+      {images && images.length > 0 && (
+        <Modal
+          visible={imageModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setImageModalVisible(false)}>
+          <View style={styles.imageModalContainer}>
+            <TouchableOpacity
+              style={styles.imageModalOverlay}
+              activeOpacity={1}
+              onPress={() => setImageModalVisible(false)}>
+              <View style={styles.imageModalContent}>
+                <Image
+                  source={{uri: images[selectedImageIndex]}}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
+                
+                {/* 이미지 카운터 */}
+                {images.length > 1 && (
+                  <View style={styles.imageCounter}>
+                    <Text style={styles.imageCounterText}>
+                      {selectedImageIndex + 1} / {images.length}
+                    </Text>
+                  </View>
+                )}
+                
+                {/* 이미지 네비게이션 */}
+                {images.length > 1 && (
+                  <View style={styles.imageNavigation}>
+                    <TouchableOpacity
+                      style={styles.navButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedImageIndex((prev) =>
+                          prev > 0 ? prev - 1 : images.length - 1
+                        );
+                      }}
+                      activeOpacity={0.7}>
+                      <Ionicons name="chevron-back" size={32} color={colors.surface} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.navButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedImageIndex((prev) =>
+                          prev < images.length - 1 ? prev + 1 : 0
+                        );
+                      }}
+                      activeOpacity={0.7}>
+                      <Ionicons name="chevron-forward" size={32} color={colors.surface} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            
+            {/* 닫기 버튼 */}
+            <TouchableOpacity
+              style={styles.imageModalCloseButton}
+              onPress={() => setImageModalVisible(false)}
+              activeOpacity={0.7}>
+              <Ionicons name="close" size={28} color={colors.surface} />
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      )}
+    </>
+  );
+
   if (onPress) {
     return (
       <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-        {CardContent}
+        {Content}
       </TouchableOpacity>
     );
   }
 
-  return CardContent;
+  return Content;
 }
 
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
@@ -228,6 +321,64 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     ...typography.styles.small,
     color: colors.textTertiary,
     fontWeight: typography.fontWeight.semibold,
+  },
+  imageModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  imageModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalContent: {
+    width: width,
+    height: width,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: width * 0.95,
+    height: width * 0.95,
+  },
+  imageCounter: {
+    position: 'absolute',
+    top: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  imageCounterText: {
+    color: colors.surface,
+    fontSize: 14,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  imageNavigation: {
+    position: 'absolute',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: spacing.lg,
+  },
+  navButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: spacing.lg,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

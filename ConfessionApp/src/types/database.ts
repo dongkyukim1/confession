@@ -76,6 +76,27 @@ export type ReportInsert = {
   description?: string | null;
 };
 
+// 업적 타입
+export type AchievementType = 
+  | 'first_post' 
+  | 'first_like' 
+  | 'like_received' 
+  | '7_day_streak';
+
+export interface Achievement {
+  id: string;
+  device_id: string;
+  achievement_type: AchievementType;
+  unlocked_at: string;
+  viewed: boolean;
+}
+
+export type AchievementInsert = {
+  device_id: string;
+  achievement_type: AchievementType;
+  viewed?: boolean;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -93,6 +114,11 @@ export interface Database {
         Row: Report;
         Insert: ReportInsert;
         Update: Partial<ReportInsert>;
+      };
+      user_achievements: {
+        Row: Achievement;
+        Insert: AchievementInsert;
+        Update: Partial<AchievementInsert>;
       };
     };
     Views: {

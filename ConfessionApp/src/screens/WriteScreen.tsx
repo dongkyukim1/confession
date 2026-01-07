@@ -31,6 +31,9 @@ import {useTheme} from '../contexts/ThemeContext';
 import MoodSelector from '../components/MoodSelector';
 import TagInput from '../components/TagInput';
 import ImagePickerComponent from '../components/ImagePicker';
+import {useAchievementChecker} from '../hooks/useAchievementChecker';
+import AchievementModal from '../components/AchievementModal';
+import {checkStreakAchievement} from '../utils/achievementManager';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -52,19 +55,29 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [images, setImages] = useState<string[]>([]);
   const {showModal} = useModal();
   const {colors} = useTheme();
+  
+  // 업적 시스템
+  const {
+    unlockAchievement,
+    currentAchievement,
+    hideAchievement,
+    isModalVisible,
+  } = useAchievementChecker();
 
   useEffect(() => {
     getOrCreateDeviceId().then(setDeviceId);
   }, []);
 
-  // Android 백 버튼 처리: 홈 화면으로 이동
+  // Android 하드웨어 뒤로가기 버튼 처리
   useEffect(() => {
+    const backAction = () => {
+      navigation.goBack();
+      return true; // 이벤트를 소비했음을 알림
+    };
+
     const backHandler = BackHandler.addEventListener(
       'hardwareBackPress',
-      () => {
-        navigation.navigate('MainTabs', {screen: 'Home'});
-        return true; // 이벤트 처리 완료
-      },
+      backAction,
     );
 
     return () => backHandler.remove();
@@ -103,6 +116,14 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
 
       if (error) throw error;
 
+      // 첫 글 작성 업적 체크
+      if (deviceId) {
+        await unlockAchievement(deviceId, 'first_post');
+        
+        // 7일 연속 작성 업적 체크
+        await checkStreakAchievement(deviceId);
+      }
+
       // 다른 사람의 랜덤 고해성사 가져오기
       const {data: randomConfession, error: fetchError} = await supabase
         .from('confessions')
@@ -121,7 +142,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           '첫 번째 작성자',
           '아직 다른 일기가 없습니다.\n당신이 첫 번째입니다! 🎉',
           true,
-          [{text: '확인', onPress: () => navigation.navigate('MainTabs', {screen: 'Home'})}],
+          [{text: '확인', onPress: () => navigation.goBack()}],
         );
         return;
       }
@@ -149,7 +170,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('MainTabs', {screen: 'Home'})}
+          onPress={() => navigation.goBack()}
           activeOpacity={0.7}
           hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
           <View style={styles.backButtonInner}>
@@ -275,6 +296,15 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           </Text>
         </View>
       </KeyboardAvoidingView>
+      
+      {/* 업적 모달 */}
+      {currentAchievement && (
+        <AchievementModal
+          visible={isModalVisible}
+          achievementType={currentAchievement.achievement_type}
+          onClose={hideAchievement}
+        />
+      )}
     </SafeAreaView>
   );
 }

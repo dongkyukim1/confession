@@ -40,7 +40,7 @@ export default function FloatingActionButton({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 90, // 하단 네비게이션 바와 겹치지 않도록 위로 이동
+    bottom: 90, // 하단 네비게이션 바(70px) + 여유 공간
     right: 20,
     zIndex: 1000,
   },

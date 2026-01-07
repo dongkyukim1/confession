@@ -36,3 +36,6 @@ export * from './features/TagSelector';
 // UI 컴포넌트
 export * from './ui';
 
+
+// Font 컴포넌트
+export {default as FontSelector} from './FontSelector';

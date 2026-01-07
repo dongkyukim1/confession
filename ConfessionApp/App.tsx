@@ -3,8 +3,8 @@
  *
  * 사용자가 고백을 작성하면 다른 사람의 랜덤 고백을 볼 수 있는 앱
  */
-import React from 'react';
-import {StatusBar, ImageBackground, StyleSheet} from 'react-native';
+import React, {useEffect} from 'react';
+import {StatusBar, ImageBackground, StyleSheet, Text, TextInput} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer, DefaultTheme, DarkTheme} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -24,6 +24,7 @@ import {
 import {RootStackParamList, BottomTabParamList} from './src/types';
 import {ModalProvider} from './src/contexts/ModalContext';
 import {ThemeProvider, useTheme} from './src/contexts/ThemeContext';
+import {FontProvider, useFont} from './src/contexts/FontContext';
 import {typography} from './src/theme';
 import {BACKGROUNDS} from './src/constants/assets';
 
@@ -133,6 +134,25 @@ function MainTabs() {
  */
 function AppContent() {
   const {isDark, colors} = useTheme();
+  const {selectedFont, fontOption} = useFont();
+
+  // 전역 폰트 설정 - 폰트 변경 시마다 업데이트
+  useEffect(() => {
+    const fontFamily = fontOption.fontFamily;
+    
+    // Text 컴포넌트 기본 폰트 설정
+    if (Text.defaultProps) {
+      Text.defaultProps.style = { fontFamily };
+    }
+    
+    // TextInput 컴포넌트 기본 폰트 설정
+    if (TextInput.defaultProps) {
+      TextInput.defaultProps.style = { fontFamily };
+    }
+    
+    // 로그
+    console.log('✅ 전역 폰트 변경:', fontOption.displayName, '→', fontFamily);
+  }, [selectedFont, fontOption]);
 
   // 테마에 따른 Navigation 테마 생성
   const navigationTheme = isDark
@@ -179,7 +199,6 @@ function AppContent() {
             options={{
               animation: 'slide_from_bottom',
               presentation: 'modal',
-              gestureEnabled: true, // iOS 스와이프 제스처 활성화
             }}
           />
           <Stack.Screen
@@ -214,13 +233,25 @@ function AppContent() {
   );
 }
 
+function AppWrapper() {
+  const {selectedFont, fontOption} = useFont();
+  
+  // 폰트 변경 시 전체 앱 리렌더링 (key 변경으로 강제 리마운트)
+  // 콘솔 로그로 확인
+  console.log('🎨 AppWrapper 렌더링, 현재 폰트:', fontOption.displayName);
+  
+  return <AppContent key={selectedFont} />;
+}
+
 function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ModalProvider>
-          <AppContent />
-        </ModalProvider>
+        <FontProvider>
+          <ModalProvider>
+            <AppWrapper />
+          </ModalProvider>
+        </FontProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

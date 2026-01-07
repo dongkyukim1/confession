@@ -1,0 +1,145 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/AntDesign.ttf",
+      "sha1": "4e77868439280fb434d4697c7b911271406c81f3"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Entypo.ttf",
+      "sha1": "12b5670eb178138f77285d5f2c246d3cc5fa67d6"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/EvilIcons.ttf",
+      "sha1": "91d377ea3cf47490b256c2ed081704a7dabdae0c"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Feather.ttf",
+      "sha1": "e6604258b1ced5efd51360875d782fca65381d47"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome.ttf",
+      "sha1": "13b1eab65a983c7a73bc7997c479d66943f7c6cb"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf",
+      "sha1": "3fa2d67cef22da5c3f3eb5730c6afbd6fecf0372"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf",
+      "sha1": "7d849a3981a716e2ba4a84634bc57d0b8054a6a3"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf",
+      "sha1": "c1b9fae262f42868c075ac865a8ab34920e20a2c"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome6_Brands.ttf",
+      "sha1": "7ce89c71d5a51ac65b159c71422783dd86529c66"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome6_Regular.ttf",
+      "sha1": "775e2ecfc18d22b177274453d4c014ca6be63208"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/FontAwesome6_Solid.ttf",
+      "sha1": "2b8e11389d98122399667cf64941eb58497dc128"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Fontisto.ttf",
+      "sha1": "c090a3ec96a3f1bb9b615c2f3f204ce0dcdcdbc3"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Foundation.ttf",
+      "sha1": "4b2bce6c792493a4a5716b6fec2dbefe89492c3f"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Ionicons.ttf",
+      "sha1": "86e07c3d974eb09099e6e5a9b3b8310303cf0feb"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf",
+      "sha1": "4c2a838b00dbb5e8bb1b368fce0de534e8eb241c"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/MaterialIcons.ttf",
+      "sha1": "7e02c3f005532ff4d24148567c84089756a7848a"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Octicons.ttf",
+      "sha1": "56acefc0731f35ee23b195b1c8cb5fa94a0db97b"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/SimpleLineIcons.ttf",
+      "sha1": "9ffb81a5a11112e292f2cc323e98486bad597599"
+    },
+    {
+      "path": "node_modules/react-native-vector-icons/Fonts/Zocial.ttf",
+      "sha1": "6a48a962b06cc3acbdfd61df0d9a34744eea5e8d"
+    },
+    {
+      "path": "assets/fonts/BookkGothic_Bold.ttf",
+      "sha1": "c8d04179943aa2747e17f5aab0b06035797ef2c0"
+    },
+    {
+      "path": "assets/fonts/BookkGothic_Light.ttf",
+      "sha1": "b47b3109ab66ec8ef3714b196ff0c83f32225778"
+    },
+    {
+      "path": "assets/fonts/BookkMyungjo_Bold.ttf",
+      "sha1": "60decb349ef81979efdf104e2ef368f4da78c8bb"
+    },
+    {
+      "path": "assets/fonts/BookkMyungjo_Light.ttf",
+      "sha1": "94ae2e5d54dfdfe8bbc6ba6e7039d1c6dd86a693"
+    },
+    {
+      "path": "assets/fonts/Hakgyoansim_BoardmarkerOTFR.otf",
+      "sha1": "4a544a4d4785ea714a99aa7391e84043c0e00563"
+    },
+    {
+      "path": "assets/fonts/Hakgyoansim_BoardmarkerR.ttf",
+      "sha1": "86dfb312a3c277fe59cc9331b4726a2c8a2f530d"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-1Thin.ttf",
+      "sha1": "b59a2455e37be1ba05817b5e7f6f0d824438f3e9"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-2ExtraLight.ttf",
+      "sha1": "f9d0919453445ab7ffd67acae0ac6a689638f79b"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-3Light.ttf",
+      "sha1": "f348537e844e3cd4a08a9ecd3ed68da5600768d3"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-4Regular.ttf",
+      "sha1": "fd40202ed4497b47b6c2f120679c2cc11419dcc2"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-5Medium.ttf",
+      "sha1": "22fcc9a28f200a91c4fb099a2f2bfeb750795c6b"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-6SemiBold.ttf",
+      "sha1": "6169e75e0642c487d48062ee939421429b98fdfa"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-7Bold.ttf",
+      "sha1": "04359bca1af22dcdb6e49db5843cdb0222e0a7e9"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-8ExtraBold.ttf",
+      "sha1": "ee9cbce67dfc86a6af8feeb6bfdeb9645e09bb57"
+    },
+    {
+      "path": "assets/fonts/Paperlogy-9Black.ttf",
+      "sha1": "3fea138d003cac48b3d5e71db76863947a2afa8e"
+    },
+    {
+      "path": "assets/fonts/README.md",
+      "sha1": "8af25dc42b2b23a0aa9ac8a6f73d1904a177f705"
+    }
+  ]
+}

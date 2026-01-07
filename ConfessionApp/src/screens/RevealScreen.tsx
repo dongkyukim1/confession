@@ -13,6 +13,9 @@ import {
   Animated,
   Dimensions,
   SafeAreaView,
+  Image,
+  ScrollView,
+  Modal,
 } from 'react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RouteProp} from '@react-navigation/native';
@@ -27,6 +30,8 @@ import {useTheme} from '../contexts/ThemeContext';
 import {LikeDislikeButtons} from '../components/features/LikeDislikeButtons';
 import {ReportModal} from '../components/features/ReportModal';
 import {AnimatedLoading} from '../components/AnimatedLoading';
+import {useAchievementChecker} from '../hooks/useAchievementChecker';
+import AchievementModal from '../components/AchievementModal';
 
 type RevealScreenProps = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Reveal'>;
@@ -52,11 +57,23 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   const [isReported, setIsReported] = useState(false);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  
+  // 이미지 모달 상태
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   // 애니메이션 값
   const flipAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  
+  // 업적 시스템
+  const {
+    unlockAchievement,
+    currentAchievement,
+    hideAchievement,
+    isModalVisible: achievementModalVisible,
+  } = useAchievementChecker();
 
   useEffect(() => {
     init();
@@ -211,7 +228,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   };
   
   const handleLike = async () => {
-    if (!deviceId) return;
+    if (!deviceId || !confession) return;
 
     try {
       if (userLikeType === 'like') {
@@ -224,6 +241,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         setUserLikeType(null);
         setLikeCount(prev => Math.max(prev - 1, 0));
       } else {
+        // 좋아요 추가
         await supabase
           .from('likes')
           .upsert({
@@ -235,10 +253,20 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
           });
 
         const wasDisliked = userLikeType === 'dislike';
+        const newLikeCount = likeCount + 1;
         setUserLikeType('like');
-        setLikeCount(prev => prev + 1);
+        setLikeCount(newLikeCount);
         if (wasDisliked) {
           setDislikeCount(prev => Math.max(prev - 1, 0));
+        }
+        
+        // 글 작성자에게 업적 부여
+        // 첫 좋아요인지 확인
+        if (newLikeCount === 1) {
+          await unlockAchievement(confession.device_id, 'first_like');
+        } else {
+          // 일반 좋아요 애니메이션 (짧게)
+          await unlockAchievement(confession.device_id, 'like_received');
         }
       }
     } catch (error) {
@@ -387,6 +415,31 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
           
           <Text style={styles.confessionText}>{confession.content}</Text>
           
+          {/* 이미지 갤러리 */}
+          {confession.images && confession.images.length > 0 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.imageGallery}
+              style={styles.imageGalleryContainer}>
+              {confession.images.map((imageUrl, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  onPress={() => {
+                    setSelectedImageIndex(idx);
+                    setImageModalVisible(true);
+                  }}
+                  activeOpacity={0.8}>
+                  <Image
+                    source={{uri: imageUrl}}
+                    style={styles.galleryImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+          
           {/* 태그 */}
           {confession.tags && confession.tags.length > 0 && (
             <View style={styles.cardTagsContainer}>
@@ -465,6 +518,86 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         onSubmit={handleReport}
         isSubmitting={isSubmittingReport}
       />
+      
+      {/* 이미지 확대 모달 */}
+      {confession?.images && confession.images.length > 0 && (
+        <Modal
+          visible={imageModalVisible}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setImageModalVisible(false)}>
+          <View style={styles.imageModalContainer}>
+            <TouchableOpacity
+              style={styles.imageModalOverlay}
+              activeOpacity={1}
+              onPress={() => setImageModalVisible(false)}>
+              <View style={styles.imageModalContent}>
+                <Image
+                  source={{uri: confession.images[selectedImageIndex]}}
+                  style={styles.fullImage}
+                  resizeMode="contain"
+                />
+                
+                {/* 이미지 카운터 */}
+                {confession.images.length > 1 && (
+                  <View style={styles.imageCounter}>
+                    <Text style={styles.imageCounterText}>
+                      {selectedImageIndex + 1} / {confession.images.length}
+                    </Text>
+                  </View>
+                )}
+                
+                {/* 이미지 네비게이션 */}
+                {confession.images.length > 1 && (
+                  <View style={styles.imageNavigation}>
+                    <TouchableOpacity
+                      style={styles.navButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedImageIndex((prev) =>
+                          prev > 0 ? prev - 1 : confession.images!.length - 1
+                        );
+                      }}
+                      activeOpacity={0.7}>
+                      <Ionicons name="chevron-back" size={32} color={colors.surface} />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.navButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setSelectedImageIndex((prev) =>
+                          prev < confession.images!.length - 1 ? prev + 1 : 0
+                        );
+                      }}
+                      activeOpacity={0.7}>
+                      <Ionicons name="chevron-forward" size={32} color={colors.surface} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            
+            {/* 닫기 버튼 */}
+            <TouchableOpacity
+              style={styles.imageModalCloseButton}
+              onPress={() => setImageModalVisible(false)}
+              activeOpacity={0.7}>
+              <Ionicons name="close" size={28} color={colors.surface} />
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      )}
+      
+      {/* 업적 모달 */}
+      {currentAchievement && (
+        <AchievementModal
+          visible={achievementModalVisible}
+          achievementType={currentAchievement.achievement_type}
+          onClose={hideAchievement}
+          autoCloseDelay={currentAchievement.achievement_type === 'like_received' ? 2000 : 5000}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -608,6 +741,20 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.lg,
   },
+  imageGalleryContainer: {
+    maxHeight: 90,
+    marginTop: spacing.md,
+  },
+  imageGallery: {
+    gap: spacing.xs,
+    paddingHorizontal: spacing.xs,
+  },
+  galleryImage: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.backgroundAlt,
+  },
   cardTagsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -678,6 +825,64 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   writeButtonText: {
     ...typography.styles.bodyBold,
     color: colors.surface,
+  },
+  imageModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+  },
+  imageModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalContent: {
+    width: width,
+    height: height * 0.7,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: width * 0.95,
+    height: height * 0.7,
+  },
+  imageCounter: {
+    position: 'absolute',
+    top: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  imageCounterText: {
+    color: colors.surface,
+    fontSize: 14,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  imageNavigation: {
+    position: 'absolute',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: spacing.lg,
+  },
+  navButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageModalCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: spacing.lg,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -6,8 +6,8 @@
 import React, {useState} from 'react';
 import {View, Text, StyleSheet, Pressable, Animated} from 'react-native';
 import {REACTIONS} from '../../types/features';
-import {useTheme} from '../../theme';
-import {spacing, borderRadius, typography} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, borderRadius, typography} from '../../theme';
 import {triggerHaptic} from '../../utils/haptics';
 
 interface ReactionPickerProps {
@@ -21,8 +21,31 @@ export const ReactionPicker = ({
   currentReactions = {},
   userReaction,
 }: ReactionPickerProps) => {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    neutral: {
+      0: '#FFFFFF',
+      100: '#F5F5F5',
+      200: '#E5E5E5',
+      600: '#525252',
+      700: '#404040',
+    },
+    primary: '#FD5068',
+    primaryScale: {
+      50: '#FFF1F2',
+      500: '#FD5068',
+    },
+  };
   const [showPicker, setShowPicker] = useState(false);
+  
+  // primaryScale이 없으면 primary 문자열을 사용
+  const primary50 = typeof colors.primaryScale === 'object' && colors.primaryScale?.[50] 
+    ? colors.primaryScale[50] 
+    : '#FFF1F2';
+  const primary500 = typeof colors.primaryScale === 'object' && colors.primaryScale?.[500] 
+    ? colors.primaryScale[500] 
+    : (typeof colors.primary === 'string' ? colors.primary : '#FD5068');
 
   const handleReaction = (reactionId: string) => {
     triggerHaptic('impactMedium');
@@ -43,11 +66,11 @@ export const ReactionPicker = ({
           styles.triggerButton,
           {
             backgroundColor: showPicker
-              ? colors.primary[50]
-              : colors.neutral[100],
+              ? primary50
+              : (typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5'),
             borderColor: showPicker
-              ? colors.primary[500]
-              : colors.neutral[200],
+              ? primary500
+              : (typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5'),
           },
         ]}
         onPress={() => {
@@ -62,7 +85,7 @@ export const ReactionPicker = ({
           <Text style={styles.addEmoji}>➕</Text>
         )}
         {totalReactions > 0 && (
-          <Text style={[styles.totalCount, {color: colors.neutral[600]}]}>
+          <Text style={[styles.totalCount, {color: typeof colors.neutral === 'object' ? colors.neutral[600] : '#525252'}]}>
             {totalReactions}
           </Text>
         )}
@@ -74,8 +97,8 @@ export const ReactionPicker = ({
           style={[
             styles.pickerContainer,
             {
-              backgroundColor: colors.neutral[0],
-              borderColor: colors.neutral[200],
+              backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF',
+              borderColor: typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5',
             },
           ]}>
           {REACTIONS.map(reaction => {
@@ -88,15 +111,15 @@ export const ReactionPicker = ({
                 style={[
                   styles.reactionButton,
                   isSelected && {
-                    backgroundColor: colors.primary[50],
-                    borderColor: colors.primary[500],
+                    backgroundColor: primary50,
+                    borderColor: primary500,
                   },
                 ]}
                 onPress={() => handleReaction(reaction.id)}>
                 <Text style={styles.reactionEmoji}>{reaction.emoji}</Text>
                 {count > 0 && (
                   <Text
-                    style={[styles.reactionCount, {color: colors.neutral[600]}]}>
+                    style={[styles.reactionCount, {color: typeof colors.neutral === 'object' ? colors.neutral[600] : '#525252'}]}>
                     {count}
                   </Text>
                 )}
@@ -155,14 +178,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   addEmoji: {
-    fontSize: typography.sizes.md,
+    fontSize: typography.fontSize.base,
   },
   selectedEmoji: {
-    fontSize: typography.sizes.lg,
+    fontSize: typography.fontSize.lg,
   },
   totalCount: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
   },
   pickerContainer: {
     position: 'absolute',
@@ -190,11 +213,11 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   reactionEmoji: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.fontSize.xl,
   },
   reactionCount: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
     marginTop: 2,
   },
   reactionsDisplay: {
@@ -211,10 +234,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs / 2,
   },
   badgeEmoji: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.fontSize.sm,
   },
   badgeCount: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
   },
 });

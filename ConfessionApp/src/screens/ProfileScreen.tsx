@@ -1,7 +1,10 @@
 /**
  * 마이페이지 화면
  * 
- * 사용자 통계 및 설정을 표시합니다.
+ * 2026 디자인 시스템: 통계는 작고 뉴트럴, 플랫 리스트 스타일
+ * - 통계는 작고 뉴트럴 컬러로 표시
+ * - 설정 항목은 플랫한 리스트 스타일
+ * - 테마 선택 등은 눈에 띄지 않게
  */
 import React, {useState, useEffect} from 'react';
 import {
@@ -16,7 +19,7 @@ import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showInfoModal, showDestructiveModal} from '../contexts/ModalContext';
 import StatCard from '../components/StatCard';
-import CleanHeader from '../components/CleanHeader';
+import {ScreenLayout} from '../components/ui/ScreenLayout';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {useTheme} from '../contexts/ThemeContext';
@@ -151,116 +154,84 @@ export default function ProfileScreen() {
 
   const styles = getStyles(colors);
 
-  return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <CleanHeader
-        title="마이페이지"
-        subtitle="설정 및 통계"
-        icon="person-outline"
-      />
+  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
+  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9A9A9A';
+  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
+  const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
 
+  return (
+    <ScreenLayout
+      title="설정"
+      icon="person-outline"
+      showHeader={true}
+      showBorder={false}
+      contentStyle={styles.scrollContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
 
-      {/* 통계 카드 */}
+      {/* 통계 - 작고 뉴트럴 컬러 */}
       <View style={styles.statsContainer}>
-        <StatCard
-          icon="✍️"
-          value={myConfessionCount}
-          label="작성한 일기"
-          color={colors.primary}
-          style={styles.statCard}
-        />
-        <StatCard
-          icon="👀"
-          value={viewedCount}
-          label="본 일기"
-          color={colors.secondary}
-          style={styles.statCard}
-        />
+        <View style={styles.statItem}>
+          <Text style={[styles.statValue, {color: neutral500}]}>
+            {myConfessionCount}
+          </Text>
+          <Text style={[styles.statLabel, {color: neutral400}]}>모음</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statValue, {color: neutral500}]}>
+            {viewedCount}
+          </Text>
+          <Text style={[styles.statLabel, {color: neutral400}]}>읽은 이야기</Text>
+        </View>
       </View>
 
-      {/* 설정 메뉴 */}
+      {/* 설정 메뉴 - 플랫 리스트 스타일 */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>설정</Text>
-        
+        {/* 테마 선택 - 눈에 띄지 않게 */}
         <TouchableOpacity style={styles.menuItem} onPress={cycleTheme} activeOpacity={0.7}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons 
-              name={
-                themeMode === 'dark' ? 'moon' : 
-                themeMode === 'light' ? 'sunny' :
-                themeMode === 'ocean' ? 'water' :
-                themeMode === 'sunset' ? 'partly-sunny' :
-                themeMode === 'forest' ? 'leaf' :
-                themeMode === 'purple' ? 'sparkles' :
-                'phone-portrait-outline'
-              } 
-              size={24} 
-              color={colors.primary} 
-            />
-          </View>
-          <Text style={styles.menuText}>Theme</Text>
-          <Text style={styles.menuSubtext}>
-            {
-              themeMode === 'dark' ? 'Dark' : 
-              themeMode === 'light' ? 'Light' :
-              themeMode === 'ocean' ? 'Ocean' :
-              themeMode === 'sunset' ? 'Sunset' :
-              themeMode === 'forest' ? 'Forest' :
-              themeMode === 'purple' ? 'Purple' :
-              'Auto'
-            }
-          </Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          <Ionicons 
+            name={
+              themeMode === 'dark' ? 'moon-outline' : 
+              themeMode === 'light' ? 'sunny-outline' :
+              themeMode === 'ocean' ? 'water-outline' :
+              themeMode === 'sunset' ? 'partly-sunny-outline' :
+              themeMode === 'forest' ? 'leaf-outline' :
+              themeMode === 'purple' ? 'sparkles-outline' :
+              'phone-portrait-outline'
+            } 
+            size={20} 
+            color={neutral500} 
+          />
+          <Text style={[styles.menuText, {color: neutral700}]}>테마</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={openPrivacyPolicy} activeOpacity={0.7}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons name="lock-closed-outline" size={24} color={colors.primary} />
-          </View>
-          <Text style={styles.menuText}>개인정보처리방침</Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          <Ionicons name="lock-closed-outline" size={20} color={neutral500} />
+          <Text style={[styles.menuText, {color: neutral700}]}>개인정보처리방침</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={showAppInfo} activeOpacity={0.7}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons name="information-circle-outline" size={24} color={colors.info} />
-          </View>
-          <Text style={styles.menuText}>앱 정보</Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          <Ionicons name="information-circle-outline" size={20} color={neutral500} />
+          <Text style={[styles.menuText, {color: neutral700}]}>앱 정보</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={resetData} activeOpacity={0.7}>
-          <View style={styles.menuIconContainer}>
-            <Ionicons name="trash-outline" size={24} color={colors.error} />
-          </View>
-          <Text style={styles.menuText}>데이터 초기화</Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+          <Ionicons name="trash-outline" size={20} color={neutral500} />
+          <Text style={[styles.menuText, {color: neutral700}]}>데이터 초기화</Text>
         </TouchableOpacity>
       </View>
 
-      {/* 앱 정보 */}
+      {/* 앱 정보 - 최소화 */}
       <View style={styles.footer}>
-        <Image 
-          source={LOGO.main} 
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={styles.footerText}>너의 오늘, 나의 오늘 v1.0.0</Text>
-        <Text style={styles.footerSubtext}>
-          모든 일기는 익명으로 처리됩니다
-        </Text>
+        <Text style={[styles.footerText, {color: neutral400}]}>v1.0.0</Text>
       </View>
       </ScrollView>
-    </View>
+    </ScreenLayout>
   );
 }
 
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
+  scrollContainer: {
+    paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
   },
   statsContainer: {
     flexDirection: 'row',
@@ -279,57 +250,57 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     overflow: 'hidden',
     ...shadows.medium,
   },
-  sectionTitle: {
-    ...typography.styles.captionBold,
-    color: colors.textTertiary,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+  // 2026 디자인 시스템: 통계 스타일 추가
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.xl,
+    paddingVertical: spacing.xl,
+    marginTop: spacing.lg,
   },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: typography.fontSize.base,  // 작게
+    fontWeight: typography.fontWeight.regular,  // Bold 최소화
+    marginBottom: spacing.xs,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  statLabel: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.regular,
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  // 2026 디자인 시스템: sectionTitle 제거
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: typeof colors.neutral === 'object' ? colors.neutral[200] : colors.borderLight,  // 뉴트럴 200
+    backgroundColor: 'transparent',  // 배경 제거 (플랫 스타일)
   },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
+  // 2026 디자인 시스템: menuIconContainer 제거 (아이콘 직접 배치)
   menuText: {
     flex: 1,
-    ...typography.styles.body,
-    color: colors.textPrimary,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.regular,  // Bold 최소화
+    letterSpacing: typography.letterSpacing.normal,
   },
-  menuSubtext: {
-    ...typography.styles.caption,
-    color: colors.textSecondary,
-    marginRight: spacing.sm,
-  },
+  // 2026 디자인 시스템: menuSubtext 제거
   footer: {
     alignItems: 'center',
-    paddingVertical: spacing['2xl'],
+    paddingVertical: spacing.xl,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: spacing.lg,
-  },
+  // 2026 디자인 시스템: logo 제거
   footerText: {
-    ...typography.styles.caption,
-    color: colors.textTertiary,
-    marginBottom: spacing.xs,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.regular,
+    letterSpacing: typography.letterSpacing.normal,
   },
-  footerSubtext: {
-    ...typography.styles.small,
-    color: colors.textDisabled,
-  },
+  // 2026 디자인 시스템: footerSubtext 제거
 });
 

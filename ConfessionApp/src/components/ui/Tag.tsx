@@ -5,8 +5,8 @@
  */
 import React from 'react';
 import {View, Text, StyleSheet, ViewStyle, Pressable} from 'react-native';
-import {useTheme} from '../../theme';
-import {spacing, borderRadius, typography} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, borderRadius, typography} from '../../theme';
 import {triggerHaptic} from '../../utils/haptics';
 
 type TagVariant = 'default' | 'primary' | 'success' | 'warning' | 'error';
@@ -78,13 +78,13 @@ export const Tag = ({
         return {
           paddingVertical: spacing.xs / 2,
           paddingHorizontal: spacing.sm,
-          fontSize: typography.sizes.xs,
+          fontSize: typography.fontSize.xs,
         };
       case 'md':
         return {
           paddingVertical: spacing.xs,
           paddingHorizontal: spacing.md,
-          fontSize: typography.sizes.sm,
+          fontSize: typography.fontSize.sm,
         };
     }
   };
@@ -143,10 +143,10 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   text: {
-    fontWeight: typography.weights.medium,
+    fontWeight: typography.fontWeight.medium,
   },
   icon: {
-    lineHeight: typography.sizes.sm * typography.lineHeights.tight,
+    lineHeight: typography.fontSize.sm * typography.lineHeight.tight,
   },
   pressed: {
     opacity: 0.7,

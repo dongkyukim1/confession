@@ -4,7 +4,7 @@
  * 사용자가 고백을 작성하면 다른 사람의 랜덤 고백을 볼 수 있는 앱
  */
 import React, {useEffect} from 'react';
-import {StatusBar, ImageBackground, StyleSheet} from 'react-native';
+import {StatusBar, View, StyleSheet} from 'react-native';
 // @ts-ignore
 import {setCustomText, setCustomTextInput} from 'react-native-global-props';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
@@ -28,7 +28,6 @@ import {ModalProvider} from './src/contexts/ModalContext';
 import {ThemeProvider, useTheme} from './src/contexts/ThemeContext';
 import {FontProvider, useFont} from './src/contexts/FontContext';
 import {typography} from './src/theme';
-import {BACKGROUNDS} from './src/constants/assets';
 
 // 전역 변수 타입 선언
 declare global {
@@ -47,33 +46,31 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
  * 하단 탭 네비게이터
  */
 function MainTabs() {
-  const {colors, currentThemeName} = useTheme();
-  
-  // 테마별 배경 이미지 선택
-  const getBackgroundImage = () => {
-    const themeMap: {[key: string]: any} = {
-      light: BACKGROUNDS.light,
-      dark: BACKGROUNDS.dark,
-      ocean: BACKGROUNDS.ocean,
-      sunset: BACKGROUNDS.sunset,
-      forest: BACKGROUNDS.forest,
-      purple: BACKGROUNDS.purple,
-    };
-    return themeMap[currentThemeName] || BACKGROUNDS.light;
+  const theme = useTheme();
+  const colors = theme?.colors || {
+    background: '#FAFBFC',
+    primary: '#5B5FEF',
+    surface: '#FFFFFF',
+    textPrimary: '#1A1A1A',
+    textSecondary: '#6B7280',
+    textTertiary: '#9CA3AF',
+    success: '#10B981',
+    secondary: '#8B5CF6',
+    accent: '#EC4899',
   };
   
+  // colors가 객체인지 확인 (문자열이 아닌지)
+  const backgroundColor = typeof colors === 'object' && colors.background 
+    ? colors.background 
+    : '#FAFBFC';
+  
   return (
-    <ImageBackground
-      source={getBackgroundImage()}
-      style={styles.backgroundContainer}
-      resizeMode="cover"
-      imageStyle={styles.backgroundImage}>
-      
+    <View style={[styles.backgroundContainer, {backgroundColor: backgroundColor}]}>
       <Tab.Navigator
       screenOptions={({route}) => ({
         headerShown: false,
         sceneContainerStyle: {
-          backgroundColor: 'transparent', // 화면 배경 투명
+          backgroundColor: backgroundColor, // 안전하게 처리된 배경색 사용
         },
         tabBarIcon: ({focused, color}) => {
           let iconName: string;
@@ -90,54 +87,65 @@ function MainTabs() {
             iconName = 'help-outline';
           }
 
-          return <Ionicons name={iconName} size={focused ? 26 : 24} color={color} />;
+          // 2026 디자인 시스템: 아이콘 크기 작게 (활성: 22px, 비활성: 20px)
+          return <Ionicons name={iconName} size={focused ? 22 : 20} color={color} />;
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textTertiary,
+        // 2026 디자인 시스템: 뉴트럴 컬러 기반
+        tabBarActiveTintColor: typeof colors === 'object' && typeof colors.neutral === 'object' && colors.neutral[700]
+          ? colors.neutral[700]
+          : '#404040', // 뉴트럴 700
+        tabBarInactiveTintColor: typeof colors === 'object' && typeof colors.neutral === 'object' && colors.neutral[400]
+          ? colors.neutral[400]
+          : '#9A9A9A', // 뉴트럴 400
         tabBarStyle: {
-          backgroundColor: colors.surface + '66', // 40% 불투명도 (배경 확실히 보이도록!)
-          borderTopWidth: 0,
-          height: 70,
-          paddingBottom: 12,
-          paddingTop: 8,
-          elevation: 20,
-          shadowColor: colors.textPrimary,
-          shadowOffset: {width: 0, height: -4},
-          shadowOpacity: 0.1,
-          shadowRadius: 12,
-          position: 'absolute', // 배경이 하단 탭 뒤로 보이도록
+          backgroundColor: typeof colors === 'object' && typeof colors.neutral === 'object' && colors.neutral[0]
+            ? colors.neutral[0]
+            : '#FFFFFF', // 뉴트럴 0
+          borderTopWidth: 1,
+          borderTopColor: typeof colors === 'object' && typeof colors.neutral === 'object' && colors.neutral[200]
+            ? colors.neutral[200]
+            : '#E8E8E8', // 뉴트럴 200 (매우 얕음)
+          height: 60, // 2026 디자인 시스템: 더 낮은 높이
+          paddingBottom: 8,
+          paddingTop: 6,
+          // 2026 디자인 시스템: 그림자 제거 또는 매우 얕게
+          elevation: 0, // 그림자 제거
+          shadowOpacity: 0, // 그림자 제거
+          position: 'absolute',
         },
         tabBarLabelStyle: {
           fontSize: typography.fontSize.xs,
-          fontWeight: typography.fontWeight.semibold,
-          marginTop: 4,
+          fontWeight: typography.fontWeight.regular, // Bold 최소화
+          marginTop: 2,
+          letterSpacing: typography.letterSpacing.normal, // 자간 증가
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: 4, // 2026 디자인 시스템: 작은 터치 영역
+          minHeight: 40, // 최소 터치 영역
         },
       })}>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{tabBarLabel: '홈'}}
+        options={{tabBarLabel: ''}}  // 2026 디자인 시스템: 텍스트 제거 또는 최소화
       />
       <Tab.Screen
         name="MyDiary"
         component={MyDiaryScreen}
-        options={{tabBarLabel: '내 일기장'}}
+        options={{tabBarLabel: ''}}  // 2026 디자인 시스템: 텍스트 제거 또는 최소화
       />
       <Tab.Screen
         name="ViewedDiary"
         component={ViewedDiaryScreen}
-        options={{tabBarLabel: '본 일기장'}}
+        options={{tabBarLabel: ''}}  // 2026 디자인 시스템: 텍스트 제거 또는 최소화
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{tabBarLabel: '마이페이지'}}
+        options={{tabBarLabel: ''}}  // 2026 디자인 시스템: 텍스트 제거 또는 최소화
       />
-    </Tab.Navigator>
-    </ImageBackground>
+      </Tab.Navigator>
+    </View>
   );
 }
 
@@ -145,7 +153,17 @@ function MainTabs() {
  * 앱 내부 컴포넌트 (테마 적용)
  */
 function AppContent() {
-  const {isDark, colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    background: '#FAFBFC',
+    primary: '#5B5FEF',
+    surface: '#FFFFFF',
+    textPrimary: '#1A1A1A',
+    textSecondary: '#6B7280',
+    border: '#E5E7EB',
+  };
+  const isDark = theme?.isDark || false;
   const {fontOption} = useFont();
 
   // 전역 폰트 설정 - 폰트 변경 시마다 업데이트
@@ -183,7 +201,7 @@ function AppContent() {
         colors: {
           ...DarkTheme.colors,
           primary: colors.primary,
-          background: 'transparent', // 투명하게!
+          background: colors.background, // 테마 배경색 사용
           card: colors.surface,
           text: colors.textPrimary,
           border: colors.border,
@@ -194,7 +212,7 @@ function AppContent() {
         colors: {
           ...DefaultTheme.colors,
           primary: colors.primary,
-          background: 'transparent', // 투명하게!
+          background: colors.background, // 테마 배경색 사용
           card: colors.surface,
           text: colors.textPrimary,
           border: colors.border,
@@ -215,7 +233,7 @@ function AppContent() {
           screenOptions={{
             headerShown: false,
             animation: 'fade',
-            contentStyle: {backgroundColor: 'transparent'}, // 투명하게!
+            contentStyle: {backgroundColor: colors.background}, // 테마 배경색 사용
           }}>
           <Stack.Screen 
             key={`main-${selectedFont}`}
@@ -305,9 +323,6 @@ function App() {
 const styles = StyleSheet.create({
   backgroundContainer: {
     flex: 1,
-  },
-  backgroundImage: {
-    opacity: 0.5, // 배경 이미지 50% 불투명도 (은은하게)
   },
 });
 

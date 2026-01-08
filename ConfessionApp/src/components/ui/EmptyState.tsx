@@ -5,8 +5,8 @@
  */
 import React from 'react';
 import {View, Text, StyleSheet, ViewStyle} from 'react-native';
-import {useTheme} from '../../theme';
-import {spacing, typography} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, typography} from '../../theme';
 import {Button} from './Button';
 
 interface EmptyStateProps {
@@ -58,15 +58,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   description: {
-    fontSize: typography.sizes.md,
+    fontSize: typography.fontSize.base,
     textAlign: 'center',
-    lineHeight: typography.sizes.md * typography.lineHeights.relaxed,
+    lineHeight: typography.fontSize.base * typography.lineHeight.relaxed,
     marginBottom: spacing.lg,
   },
   button: {

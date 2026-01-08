@@ -15,8 +15,8 @@ import {
   Pressable,
 } from 'react-native';
 import {ReportReason} from '../../types/database';
-import {useTheme} from '../../theme';
-import {spacing, borderRadius, typography, shadows} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, borderRadius, typography, shadows} from '../../theme';
 import {triggerHaptic} from '../../utils/haptics';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -73,7 +73,40 @@ export const ReportModal = ({
   onSubmit,
   isSubmitting = false,
 }: ReportModalProps) => {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    neutral: {
+      0: '#FFFFFF',
+      50: '#FAFAFA',
+      100: '#F5F5F5',
+      200: '#E5E5E5',
+      300: '#D4D4D4',
+      400: '#A3A3A3',
+      500: '#737373',
+      600: '#525252',
+      700: '#404040',
+      800: '#262626',
+      900: '#171717',
+      1000: '#000000',
+    },
+    danger: {
+      50: '#FEF2F2',
+      100: '#FEE2E2',
+      500: '#EF4444',
+      600: '#DC2626',
+      700: '#B91C1C',
+      900: '#7F1D1D',
+    },
+    warning: {
+      50: '#FFFBEB',
+      100: '#FEF3C7',
+      500: '#F59E0B',
+      600: '#D97706',
+      700: '#B45309',
+      800: '#92400E',
+    },
+  };
   const [selectedReason, setSelectedReason] = useState<ReportReason | null>(
     null,
   );
@@ -307,11 +340,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#E5E7EB',
   },
   title: {
-    fontSize: typography.sizes.xl,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
   },
   content: {
     padding: spacing.lg,
@@ -322,12 +355,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   infoText: {
-    fontSize: typography.sizes.sm,
-    lineHeight: typography.sizes.sm * typography.lineHeights.relaxed,
+    fontSize: typography.fontSize.sm,
+    lineHeight: typography.fontSize.sm * typography.lineHeight.relaxed,
   },
   label: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
     marginBottom: spacing.sm,
   },
   options: {
@@ -346,16 +379,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   optionIcon: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.fontSize.xl,
   },
   optionLabel: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
     flex: 1,
   },
   optionDescription: {
-    fontSize: typography.sizes.sm,
-    lineHeight: typography.sizes.sm * typography.lineHeights.relaxed,
+    fontSize: typography.fontSize.sm,
+    lineHeight: typography.fontSize.sm * typography.lineHeight.relaxed,
     marginLeft: spacing.xl + spacing.sm,
   },
   descriptionSection: {
@@ -365,12 +398,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: borderRadius.md,
     padding: spacing.md,
-    fontSize: typography.sizes.md,
+    fontSize: typography.fontSize.base,
     textAlignVertical: 'top',
     minHeight: 100,
   },
   charCount: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.fontSize.xs,
     textAlign: 'right',
     marginTop: spacing.xs,
   },
@@ -379,7 +412,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     padding: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: '#E5E7EB',
   },
   button: {
     flex: 1,
@@ -395,9 +428,12 @@ const styles = StyleSheet.create({
     ...shadows.md,
   },
   buttonText: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
   },
 });
+
+export default ReportModal;
+
 
 

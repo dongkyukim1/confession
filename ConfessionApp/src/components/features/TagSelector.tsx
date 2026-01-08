@@ -7,8 +7,8 @@ import React from 'react';
 import {View, Text, StyleSheet, ScrollView, ViewStyle} from 'react-native';
 import {Tag} from '../ui/Tag';
 import {PREDEFINED_TAGS} from '../../types/features';
-import {useTheme} from '../../theme';
-import {spacing, typography} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, typography} from '../../theme';
 
 interface TagSelectorProps {
   selectedTags: string[];
@@ -25,7 +25,14 @@ export const TagSelector = ({
   maxTags = 3,
   style,
 }: TagSelectorProps) => {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    neutral: {
+      500: '#737373',
+      700: '#404040',
+    },
+  };
 
   const toggleTag = (tagId: string) => {
     if (selectedTags.includes(tagId)) {
@@ -40,10 +47,10 @@ export const TagSelector = ({
   return (
     <View style={[styles.container, style]}>
       <View style={styles.header}>
-        <Text style={[styles.label, {color: colors.neutral[700]}]}>
+        <Text style={[styles.label, {color: typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040'}]}>
           {label}
         </Text>
-        <Text style={[styles.count, {color: colors.neutral[500]}]}>
+        <Text style={[styles.count, {color: typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373'}]}>
           {selectedTags.length}/{maxTags}
         </Text>
       </View>
@@ -79,11 +86,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   label: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
   },
   count: {
-    fontSize: typography.sizes.xs,
+    fontSize: typography.fontSize.xs,
   },
   tagsContainer: {
     flexDirection: 'row',

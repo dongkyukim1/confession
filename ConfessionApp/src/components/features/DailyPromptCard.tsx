@@ -7,8 +7,8 @@ import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {Card} from '../ui/Card';
 import {DAILY_PROMPTS, DailyPrompt} from '../../types/features';
-import {useTheme} from '../../theme';
-import {spacing, typography, borderRadius} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, typography, borderRadius} from '../../theme';
 import {triggerHaptic} from '../../utils/haptics';
 
 interface DailyPromptCardProps {
@@ -16,8 +16,25 @@ interface DailyPromptCardProps {
 }
 
 export const DailyPromptCard = ({onUsePrompt}: DailyPromptCardProps) => {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    neutral: {
+      200: '#E5E5E5',
+      800: '#262626',
+      900: '#171717',
+    },
+    primary: '#FD5068',
+    primaryScale: {
+      500: '#FD5068',
+    },
+  };
   const [currentPrompt, setCurrentPrompt] = useState<DailyPrompt | null>(null);
+  
+  // primaryScale이 없으면 primary 문자열을 사용
+  const primary500 = typeof colors.primaryScale === 'object' && colors.primaryScale?.[500] 
+    ? colors.primaryScale[500] 
+    : (typeof colors.primary === 'string' ? colors.primary : '#FD5068');
 
   useEffect(() => {
     // Get daily prompt (changes daily)
@@ -50,7 +67,7 @@ export const DailyPromptCard = ({onUsePrompt}: DailyPromptCardProps) => {
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <Text style={styles.icon}>💡</Text>
-          <Text style={[styles.title, {color: colors.neutral[900]}]}>
+          <Text style={[styles.title, {color: typeof colors.neutral === 'object' ? colors.neutral[900] : '#171717'}]}>
             오늘의 질문
           </Text>
         </View>
@@ -58,13 +75,13 @@ export const DailyPromptCard = ({onUsePrompt}: DailyPromptCardProps) => {
           onPress={handleRefresh}
           style={[
             styles.refreshButton,
-            {backgroundColor: colors.neutral[200]},
+            {backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5'},
           ]}>
           <Text style={styles.refreshIcon}>🔄</Text>
         </Pressable>
       </View>
 
-      <Text style={[styles.promptText, {color: colors.neutral[800]}]}>
+      <Text style={[styles.promptText, {color: typeof colors.neutral === 'object' ? colors.neutral[800] : '#262626'}]}>
         {currentPrompt.text}
       </Text>
 
@@ -73,7 +90,7 @@ export const DailyPromptCard = ({onUsePrompt}: DailyPromptCardProps) => {
         style={[
           styles.useButton,
           {
-            backgroundColor: colors.primary[500],
+            backgroundColor: primary500,
           },
         ]}>
         <Text style={styles.useButtonText}>이 질문으로 작성하기</Text>
@@ -99,11 +116,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   icon: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.fontSize.xl,
   },
   title: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
   },
   refreshButton: {
     width: 32,
@@ -113,11 +130,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   refreshIcon: {
-    fontSize: typography.sizes.md,
+    fontSize: typography.fontSize.base,
   },
   promptText: {
-    fontSize: typography.sizes.md,
-    lineHeight: typography.sizes.md * typography.lineHeights.relaxed,
+    fontSize: typography.fontSize.base,
+    lineHeight: typography.fontSize.base * typography.lineHeight.relaxed,
     marginBottom: spacing.md,
   },
   useButton: {
@@ -128,7 +145,7 @@ const styles = StyleSheet.create({
   },
   useButtonText: {
     color: '#ffffff',
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
   },
 });

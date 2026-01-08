@@ -1,7 +1,11 @@
 /**
  * 일기 작성 화면
  *
- * 전체 화면으로 일기를 작성하는 전용 화면
+ * 2026 디자인 시스템: 풀스크린 중심, 큰 여백, TextInput 중심
+ * - 상단 헤더 제거 또는 최소화
+ * - TextInput은 화면 중앙에 큰 여백과 함께
+ * - MoodSelector, TagInput은 하단에 작게 배치
+ * - 제출 버튼은 하단 고정, 뉴트럴 스타일
  */
 import React, {useState, useEffect} from 'react';
 import {
@@ -12,8 +16,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  Dimensions,
   ScrollView,
   SafeAreaView,
   BackHandler,
@@ -23,9 +25,8 @@ import {RootStackParamList, Confession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../contexts/ModalContext';
-import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {spacing, borderRadius} from '../theme';
+import {spacing, typography} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 import MoodSelector from '../components/MoodSelector';
@@ -34,6 +35,7 @@ import ImagePickerComponent from '../components/ImagePicker';
 import {useAchievementChecker} from '../hooks/useAchievementChecker';
 import AchievementModal from '../components/AchievementModal';
 import {checkStreakAchievement} from '../utils/achievementManager';
+import {Button} from '../components/ui/Button';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -43,7 +45,6 @@ type WriteScreenProps = {
   navigation: WriteScreenNavigationProp;
 };
 
-const {height, width} = Dimensions.get('window');
 const MAX_CHARS = 500;
 
 export default function WriteScreen({navigation}: WriteScreenProps) {
@@ -54,7 +55,9 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const {showModal} = useModal();
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
   
   // 업적 시스템
   const {
@@ -159,26 +162,26 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
     }
   };
 
-  const charProgress = (confession.length / MAX_CHARS) * 100;
   const isOverLimit = confession.length > MAX_CHARS;
 
   const styles = getStyles(colors);
 
+  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
+  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9A9A9A';
+  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
+  const error500 = typeof colors.error === 'object' ? colors.error[500] : '#EF4444';
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
+      {/* 2026 디자인 시스템: 헤더 최소화 (뒤로가기 버튼만 작게) */}
+      <View style={styles.minimalHeader}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
           hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
-          <View style={styles.backButtonInner}>
-            <Ionicons name="close" size={28} color={colors.textPrimary} />
-          </View>
+          <Ionicons name="close" size={24} color={neutral500} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>일기 쓰기</Text>
-        <View style={styles.headerRight} />
       </View>
 
       <KeyboardAvoidingView
@@ -190,110 +193,76 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
           
-          {/* 기분 선택 */}
-          <View style={styles.section}>
-            <MoodSelector
-              selectedMood={selectedMood}
-              onMoodSelect={setSelectedMood}
+          {/* 2026 디자인 시스템: 여백을 적극적으로 사용 */}
+          <View style={styles.topSpacing} />
+
+          {/* 일기 입력 - 화면 중앙에 큰 여백과 함께 */}
+          <View style={styles.inputSection}>
+            <TextInput
+              style={styles.textInput}
+              placeholder="오늘 하루는 어땠나요?"
+              placeholderTextColor={neutral400}
+              multiline
+              maxLength={MAX_CHARS + 50}
+              value={confession}
+              onChangeText={setConfession}
+              editable={!isLoading}
+              textAlignVertical="top"
             />
+            
+            {/* 글자 수 카운터 - 작고 뉴트럴 컬러 */}
+            <Text
+              style={[
+                styles.charCount,
+                isOverLimit && {color: error500},
+              ]}>
+              {confession.length}/{MAX_CHARS}
+            </Text>
           </View>
 
-          {/* 일기 입력 */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>오늘의 이야기</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="오늘 하루는 어땠나요?&#13;&#10;무슨 일이 있었는지 자유롭게 적어보세요..."
-                placeholderTextColor={colors.textTertiary}
-                multiline
-                maxLength={MAX_CHARS + 50}
-                value={confession}
-                onChangeText={setConfession}
-                editable={!isLoading}
-                textAlignVertical="top"
+          {/* 여백 */}
+          <View style={styles.middleSpacing} />
+
+          {/* 보조 요소 - 하단에 작게 배치 */}
+          <View style={styles.auxiliarySection}>
+            {/* 기분 선택 */}
+            <View style={styles.auxiliaryItem}>
+              <MoodSelector
+                selectedMood={selectedMood}
+                onMoodSelect={setSelectedMood}
               />
             </View>
-            
-            {/* 글자 수 프로그레스 바 */}
-            <View style={styles.progressContainer}>
-              <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    {
-                      width: `${Math.min(charProgress, 100)}%`,
-                      backgroundColor: isOverLimit
-                        ? colors.error
-                        : charProgress > 80
-                        ? colors.warning
-                        : colors.primary,
-                    },
-                  ]}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.charCount,
-                  isOverLimit && styles.charCountError,
-                ]}>
-                {confession.length}/{MAX_CHARS}
-              </Text>
+
+            {/* 태그 입력 */}
+            <View style={styles.auxiliaryItem}>
+              <TagInput tags={tags} onTagsChange={setTags} />
+            </View>
+
+            {/* 사진 첨부 */}
+            <View style={styles.auxiliaryItem}>
+              <ImagePickerComponent
+                images={images}
+                onImagesChange={setImages}
+                maxImages={3}
+              />
             </View>
           </View>
 
-          {/* 사진 첨부 */}
-          <View style={styles.section}>
-            <ImagePickerComponent
-              images={images}
-              onImagesChange={setImages}
-              maxImages={3}
-            />
-          </View>
-
-          {/* 태그 입력 */}
-          <View style={styles.section}>
-            <TagInput tags={tags} onTagsChange={setTags} />
-          </View>
+          {/* 여백 */}
+          <View style={styles.bottomSpacing} />
         </ScrollView>
 
-        {/* 하단 제출 버튼 */}
+        {/* 하단 제출 버튼 - 뉴트럴 스타일 */}
         <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              (!confession.trim() || isLoading || isOverLimit) && styles.submitButtonDisabled,
-            ]}
+          <Button
+            variant="primary"
+            size="lg"
             onPress={handleSubmit}
             disabled={!confession.trim() || isLoading || isOverLimit}
-            activeOpacity={0.8}>
-            {isLoading ? (
-              <ActivityIndicator color={colors.surface} />
-            ) : (
-              <LinearGradient
-                colors={
-                  confession.trim() && !isOverLimit
-                    ? [colors.gradientStart, colors.gradientEnd]
-                    : [colors.borderDark, colors.borderDark]
-                }
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-                style={styles.submitGradient}>
-                <Ionicons
-                  name="paper-plane"
-                  size={20}
-                  color={colors.surface}
-                  style={styles.submitIcon}
-                />
-                <Text style={styles.submitButtonText}>
-                  일기 쓰고 다른 하루 보기
-                </Text>
-              </LinearGradient>
-            )}
-          </TouchableOpacity>
-          <Text style={styles.disclaimer}>
-            🔒 모든 일기는 익명으로 안전하게 처리됩니다
-          </Text>
+            loading={isLoading}
+            fullWidth>
+            완료
+          </Button>
         </View>
       </KeyboardAvoidingView>
       
@@ -314,37 +283,17 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
+  // 2026 디자인 시스템: 헤더 최소화
+  minimalHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   backButton: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backButtonInner: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 22,
-    backgroundColor: colors.backgroundAlt,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.textPrimary,
-  },
-  headerRight: {
-    width: 44,
   },
   keyboardView: {
     flex: 1,
@@ -353,95 +302,56 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.xl,  // 넉넉한 여백
     paddingBottom: spacing.xl,
   },
-  section: {
+  // 2026 디자인 시스템: 여백을 적극적으로 사용
+  topSpacing: {
+    height: spacing['2xl'],
+  },
+  middleSpacing: {
+    height: spacing.xl,
+  },
+  bottomSpacing: {
+    height: spacing['2xl'],
+  },
+  // 일기 입력 - 화면 중앙에 큰 여백과 함께
+  inputSection: {
     marginBottom: spacing.lg,
   },
-  sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.textPrimary,
+  textInput: {
+    minHeight: 300,  // 큰 높이
+    padding: spacing.lg,
+    fontSize: typography.fontSize.base,
+    color: typeof colors.neutral === 'object' ? colors.neutral[700] : colors.textPrimary,
+    lineHeight: typography.fontSize.base * typography.lineHeight.relaxed,  // 행간 증가
+    letterSpacing: typography.letterSpacing.normal,  // 자간 증가
+    textAlignVertical: 'top',
+    backgroundColor: 'transparent',  // 배경 제거
+  },
+  // 글자 수 카운터 - 작고 뉴트럴 컬러
+  charCount: {
+    fontSize: typography.fontSize.xs,
+    color: typeof colors.neutral === 'object' ? colors.neutral[500] : colors.textSecondary,
+    fontWeight: typography.fontWeight.regular,  // Bold 최소화
+    marginTop: spacing.sm,
+    textAlign: 'right',
+    letterSpacing: typography.letterSpacing.normal,
+  },
+  // 보조 요소 - 하단에 작게 배치
+  auxiliarySection: {
+    gap: spacing.md,
+  },
+  auxiliaryItem: {
     marginBottom: spacing.sm,
   },
-  inputContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    overflow: 'hidden',
-  },
-  textInput: {
-    minHeight: 200,
-    maxHeight: 300,
-    padding: spacing.lg,
-    fontSize: 16,
-    color: colors.textPrimary,
-    lineHeight: 26,
-    textAlignVertical: 'top',
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    gap: spacing.sm,
-  },
-  progressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: colors.border,
-    borderRadius: borderRadius.full,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: borderRadius.full,
-  },
-  charCount: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    fontWeight: '500',
-    minWidth: 60,
-    textAlign: 'right',
-  },
-  charCountError: {
-    color: colors.error,
-  },
+  // 하단 제출 버튼
   bottomContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.background,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  submitButton: {
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
-  submitButtonDisabled: {
-    opacity: 1,
-  },
-  submitGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-  },
-  submitIcon: {
-    marginRight: spacing.sm,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.surface,
-  },
-  disclaimer: {
-    fontSize: 12,
-    color: colors.textTertiary,
-    textAlign: 'center',
-    marginTop: spacing.sm,
+    borderTopColor: typeof colors.neutral === 'object' ? colors.neutral[200] : colors.border,
   },
 });
 

@@ -1,8 +1,11 @@
 /**
  * 고백 공개 화면
  *
- * 고백 작성 후 다른 사람의 랜덤 고백을 보여주는 화면
- * 카드가 천천히 공개되는 연출 포함
+ * 2026 디자인 시스템: 카드 중심 풀스크린, 좋아요/싫어요는 작고 뉴트럴, 제스처 우선
+ * - 상단 헤더 제거
+ * - 좋아요/싫어요 버튼은 하단에 작게, 뉴트럴 스타일
+ * - 좋아요 수는 표시하되 작고 뉴트럴 컬러 (비교 유도하지 않음)
+ * - 신고 버튼은 긴 터치로 접근
  */
 import React, {useState, useEffect, useRef} from 'react';
 import {
@@ -22,13 +25,13 @@ import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList, Confession} from '../types';
 import {LikeType, ReportReason} from '../types/database';
 import {supabase} from '../lib/supabase';
-import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, shadows, borderRadius} from '../theme';
+import {spacing} from '../theme/spacing';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 import {LikeDislikeButtons} from '../components/features/LikeDislikeButtons';
-import {ReportModal} from '../components/features/ReportModal';
+import ReportModal from '../components/features/ReportModal';
 import {AnimatedLoading} from '../components/AnimatedLoading';
 import {useAchievementChecker} from '../hooks/useAchievementChecker';
 import AchievementModal from '../components/AchievementModal';
@@ -41,11 +44,13 @@ type RevealScreenProps = {
 const {width, height} = Dimensions.get('window');
 
 export default function RevealScreen({navigation, route}: RevealScreenProps) {
-  const {confessionId} = route.params;
+  const confessionId = route.params?.confessionId;
   const [confession, setConfession] = useState<Confession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRevealed, setIsRevealed] = useState(false);
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
   
   // 좋아요/싫어요 상태
   const [likeCount, setLikeCount] = useState(0);
@@ -76,11 +81,14 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   } = useAchievementChecker();
 
   useEffect(() => {
-    init();
+    if (confessionId) {
+      init();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [confessionId]);
   
   const init = async () => {
+    if (!confessionId) return;
     const id = await import('../utils/deviceId').then(m => 
       m.getOrCreateDeviceId()
     );
@@ -92,6 +100,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
    * 고해성사 데이터 가져오기
    */
   const fetchConfession = async (id: string) => {
+    if (!confessionId) return;
     try {
       const {data, error} = await supabase
         .from('confessions')
@@ -307,6 +316,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
       }
     } catch (error) {
       console.error('Dislike error:', error);
+      // 에러 발생 시에도 사용자에게 피드백 제공 (선택사항)
     }
   };
 
@@ -358,34 +368,24 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
     );
   }
 
+  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
+  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9A9A9A';
+  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* 그라데이션 배경 */}
-      <LinearGradient
-        colors={[colors.background, colors.backgroundAlt, colors.background]}
-        start={{x: 0, y: 0}}
-        end={{x: 1, y: 1}}
-        style={styles.backgroundGradient}
-      />
+      {/* 2026 디자인 시스템: 그라데이션 배경 제거 (뉴트럴 배경) */}
 
-      {/* 닫기 버튼 */}
+      {/* 닫기 버튼 - 최소화 */}
       <TouchableOpacity
         style={styles.closeButton}
         onPress={() => navigation.navigate('MainTabs')}
         activeOpacity={0.7}
         hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
-        <View style={styles.closeButtonInner}>
-          <Ionicons name="close" size={28} color={colors.textPrimary} />
-        </View>
+        <Ionicons name="close" size={20} color={neutral500} />
       </TouchableOpacity>
 
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text style={styles.headerIcon}>✨</Text>
-        <Text style={styles.headerTitle}>
-          {isRevealed ? '다른 사람의 하루' : '하루가 공개됩니다...'}
-        </Text>
-      </View>
+      {/* 2026 디자인 시스템: 헤더 제거 */}
 
       {/* 카드 영역 */}
       <Animated.View
@@ -457,10 +457,10 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         </Animated.View>
       </Animated.View>
 
-      {/* 하단 액션 버튼들 */}
+      {/* 하단 액션 버튼들 - 작고 뉴트럴 스타일 */}
       {isRevealed && (
         <Animated.View style={[styles.bottomSection, {opacity: fadeAnim}]}>
-          {/* 좋아요/싫어요 & 신고 */}
+          {/* 좋아요/싫어요 - 작고 뉴트럴 스타일 */}
           <View style={styles.actionsRow}>
             <LikeDislikeButtons
               likeCount={likeCount}
@@ -470,44 +470,24 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
               onDislike={handleDislike}
             />
             
-            {/* 신고 버튼 */}
+            {/* 신고 버튼 - 긴 터치로 접근 */}
             <TouchableOpacity
-              onPress={() => setReportModalVisible(true)}
+              onLongPress={() => setReportModalVisible(true)}
               disabled={isReported}
               style={[
                 styles.reportButton,
-                {
-                  opacity: isReported ? 0.5 : 1,
-                },
+                {opacity: isReported ? 0.3 : 0.5},  // 눈에 띄지 않게
               ]}
               activeOpacity={0.7}>
               <Ionicons
-                name="flag"
-                size={20}
-                color={isReported ? colors.textTertiary : colors.error}
+                name="flag-outline"
+                size={16}
+                color={neutral400}
               />
-              <Text style={[
-                styles.reportButtonText,
-                {color: isReported ? colors.textTertiary : colors.error}
-              ]}>
-                {isReported ? '신고됨' : '신고'}
-              </Text>
             </TouchableOpacity>
           </View>
           
-          {/* 일기 쓰기 버튼 */}
-          <TouchableOpacity
-            style={styles.writeButton}
-            onPress={() => navigation.navigate('MainTabs')}
-            activeOpacity={0.8}>
-            <LinearGradient
-              colors={[colors.gradientStart, colors.gradientEnd]}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              style={styles.writeButtonGradient}>
-              <Text style={styles.writeButtonText}>나도 일기 쓰기</Text>
-            </LinearGradient>
-          </TouchableOpacity>
+          {/* 2026 디자인 시스템: "나도 일기 쓰기" 버튼 제거 (핵심 행동만) */}
         </Animated.View>
       )}
       
@@ -667,19 +647,7 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     ...typography.styles.bodyBold,
     color: colors.textPrimary,
   },
-  header: {
-    position: 'absolute',
-    top: height * 0.1,
-    alignItems: 'center',
-  },
-  headerIcon: {
-    fontSize: 40,
-    marginBottom: spacing.md,
-  },
-  headerTitle: {
-    ...typography.styles.headline,
-    color: colors.textPrimary,
-  },
+  // 2026 디자인 시스템: header 제거
   cardContainer: {
     width: width * 0.88,
     height: height * 0.5,
@@ -786,37 +754,27 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   },
   bottomSection: {
     position: 'absolute',
-    bottom: height * 0.08,
+    bottom: spacing.xl,
     width: '100%',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.small,
+    justifyContent: 'center',  // 중앙 정렬
+    gap: spacing.md,
+    backgroundColor: 'transparent',  // 배경 제거
   },
   reportButton: {
-    flexDirection: 'row',
+    width: 32,
+    height: 32,
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    justifyContent: 'center',
+    borderRadius: borderRadius.full,
+    backgroundColor: 'transparent',  // 배경 제거
   },
-  reportButtonText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  writeButton: {
-    borderRadius: borderRadius.md,
-    overflow: 'hidden',
-  },
+  // 2026 디자인 시스템: reportButtonText 제거 (아이콘만)
+  // 2026 디자인 시스템: writeButton 제거
   writeButtonGradient: {
     paddingVertical: 18,
     alignItems: 'center',

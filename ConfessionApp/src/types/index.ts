@@ -9,7 +9,7 @@ export * from './database';
 export type RootStackParamList = {
   MainTabs: undefined;
   Write: undefined;
-  Reveal: undefined;
+  Reveal: {confessionId: string};
   AnimationShowcase: undefined;
   IconShowcase: undefined;
 };

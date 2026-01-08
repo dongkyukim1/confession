@@ -5,7 +5,11 @@
       "Bash(cat:*)",
       "Bash(chmod:*)",
       "Bash(ls:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(while read f)",
+      "Bash(do grep -L \"import.*spacing\" \"$f\")",
+      "Bash(done)"
     ]
   }
 }

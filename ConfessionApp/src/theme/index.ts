@@ -8,11 +8,13 @@ export * from './colors';
 export * from './typography';
 export * from './shadows';
 export * from './spacing';
+export * from './animations';
 
 import {colors, lightColors, darkColors} from './colors';
 import {typography} from './typography';
 import {shadows} from './shadows';
 import {spacing, borderRadius, iconSize} from './spacing';
+import {animations} from './animations';
 
 /**
  * 전체 테마 객체
@@ -24,6 +26,7 @@ export const theme = {
   spacing,
   borderRadius,
   iconSize,
+  animations,
 } as const;
 
 /**

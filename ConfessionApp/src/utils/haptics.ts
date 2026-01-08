@@ -62,6 +62,40 @@ export const errorHaptic = () => {
   }
 };
 
+/**
+ * 통합 햅틱 함수 (다양한 타입 지원)
+ */
+export const triggerHaptic = (type: 'impactLight' | 'impactMedium' | 'impactHeavy' | 'notificationSuccess' | 'notificationWarning' | 'notificationError' | string) => {
+  try {
+    switch (type) {
+      case 'impactLight':
+        lightHaptic();
+        break;
+      case 'impactMedium':
+        mediumHaptic();
+        break;
+      case 'impactHeavy':
+        strongHaptic();
+        break;
+      case 'notificationSuccess':
+        successHaptic();
+        break;
+      case 'notificationWarning':
+      case 'notificationError':
+        errorHaptic();
+        break;
+      default:
+        // 기본값으로 light haptic 사용
+        lightHaptic();
+        break;
+    }
+  } catch (error) {
+    // 햅틱 실패해도 앱이 멈추지 않도록
+    console.warn('Haptic feedback error:', error);
+  }
+};
+
+
 
 
 

@@ -33,3 +33,4 @@ CREATE INDEX IF NOT EXISTS idx_confessions_mood ON public.confessions(mood);
 
 
 
+

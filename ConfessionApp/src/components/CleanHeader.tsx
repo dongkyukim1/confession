@@ -27,7 +27,9 @@ export default function CleanHeader({
   count,
   showBorder = false,
 }: CleanHeaderProps) {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
   const styles = getStyles(colors);
 
   return (
@@ -40,7 +42,7 @@ export default function CleanHeader({
             </View>
           ) : icon ? (
             <View style={styles.iconContainer}>
-              <Ionicons name={icon} size={28} color={colors.primary} />
+              <Ionicons name={icon} size={24} color={typeof colors.primary === 'string' ? colors.primary : '#FD5068'} />
             </View>
           ) : null}
           <View style={styles.textContainer}>
@@ -59,13 +61,13 @@ export default function CleanHeader({
   );
 }
 
-const getStyles = (colors: typeof lightColors) =>
+const getStyles = (colors: any) =>
   StyleSheet.create({
     container: {
-      backgroundColor: colors.surface + '66', // 40% 불투명도 (배경 확실히 보이도록!)
-      paddingTop: 60,
-      paddingBottom: spacing.lg,
-      paddingHorizontal: spacing.lg,
+      backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF',
+      paddingTop: 50,
+      paddingBottom: spacing.md,
+      paddingHorizontal: spacing.xl, // ScreenLayout과 통일
     },
     containerBorder: {
       borderBottomWidth: 1,
@@ -103,15 +105,15 @@ const getStyles = (colors: typeof lightColors) =>
       flex: 1,
     },
     title: {
-      fontSize: 24,
-      fontWeight: '700',
-      color: colors.textPrimary,
+      fontSize: typography.fontSize['2xl'], // 2026 디자인 시스템
+      fontWeight: typography.fontWeight.medium, // Bold 최소화
+      color: typeof colors.neutral === 'object' ? colors.neutral[900] : '#171717',
       marginBottom: spacing.xs / 2,
     },
     subtitle: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      fontWeight: '500',
+      fontSize: typography.fontSize.sm, // 2026 디자인 시스템
+      color: typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373',
+      fontWeight: typography.fontWeight.regular, // Bold 최소화
     },
     countBadge: {
       paddingHorizontal: spacing.md,
@@ -121,8 +123,8 @@ const getStyles = (colors: typeof lightColors) =>
     },
     countText: {
       fontSize: 16,
-      fontWeight: '700',
-      color: colors.primary,
+      fontWeight: '600', // 틴더 스타일: 더 가벼운 굵기
+      color: typeof colors.primary === 'string' ? colors.primary : '#FD5068',
     },
   });
 

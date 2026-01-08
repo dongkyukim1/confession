@@ -15,7 +15,7 @@ import {ViewedConfession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import ConfessionCard from '../components/ConfessionCard';
-import CleanHeader from '../components/CleanHeader';
+import {ScreenLayout} from '../components/ui/ScreenLayout';
 import {AnimatedLoading} from '../components/AnimatedLoading';
 import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useModal, showErrorModal} from '../contexts/ModalContext';
@@ -118,35 +118,18 @@ export default function ViewedDiaryScreen() {
   };
 
   const styles = getStyles(colors);
-
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <CleanHeader
-          title="본 일기장"
-          subtitle="내가 본 일기들"
-          icon="eye-outline"
-        />
-        <AnimatedLoading
-          fullScreen
-          message="일기를 불러오는 중..."
-          size={150}
-        />
-      </View>
-    );
-  }
+  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
 
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <CleanHeader
-        title="본 일기장"
-        subtitle={`조회한 일기 ${viewedConfessions.length}개`}
-        icon="eye-outline"
-        count={viewedConfessions.length}
-        showBorder={true}
-      />
-
+    <ScreenLayout
+      title="읽은 이야기"
+      subtitle=""
+      icon="eye-outline"
+      showHeader={true}
+      showBorder={false}
+      isLoading={isLoading}
+      loadingMessage="일기를 불러오는 중..."
+      contentStyle={styles.listContainer}>
       {/* 목록 */}
       <FlatList
         data={viewedConfessions}
@@ -158,26 +141,22 @@ export default function ViewedDiaryScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
+            tintColor={neutral500}
+            colors={[neutral500]}
           />
         }
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
       />
-    </View>
+    </ScreenLayout>
   );
 }
 
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+  listContainer: {
+    paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
   },
   listContent: {
     paddingTop: spacing.lg,

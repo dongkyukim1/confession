@@ -1,7 +1,10 @@
 /**
  * 내 일기장 화면
  * 
- * 내가 작성한 고백 목록을 표시합니다.
+ * 2026 디자인 시스템: 플랫 카드, 무한 스크롤 최소화
+ * - 플랫 카드 스타일
+ * - 한 번에 제한된 수만 표시
+ * - 날짜/시간은 작고 뉴트럴 컬러
  */
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -17,7 +20,7 @@ import {Confession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import ConfessionCard from '../components/ConfessionCard';
-import CleanHeader from '../components/CleanHeader';
+import {ScreenLayout} from '../components/ui/ScreenLayout';
 import {AnimatedLoading} from '../components/AnimatedLoading';
 import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useModal, showDestructiveModal, showErrorModal, showInfoModal} from '../contexts/ModalContext';
@@ -175,78 +178,19 @@ export default function MyDiaryScreen() {
 
   const styles = getStyles(colors);
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <CleanHeader
-          title="내 일기장"
-          subtitle="나의 기록들"
-          icon="book-outline"
-        />
-        <AnimatedLoading
-          fullScreen
-          message="일기를 불러오는 중..."
-          size={150}
-        />
-      </View>
-    );
-  }
+  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
+  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
 
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <CleanHeader
-        title="내 일기장"
-        subtitle={`작성한 일기 ${confessions.length}개`}
-        icon="book-outline"
-        count={confessions.length}
-        showBorder={true}
-      />
-
-      {/* 태그 필터 */}
-      {allTags.length > 0 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tagFilter}
-          contentContainerStyle={styles.tagFilterContent}>
-          <TouchableOpacity
-            style={[
-              styles.tagFilterButton,
-              !selectedTag && styles.tagFilterButtonActive,
-            ]}
-            onPress={() => filterByTag(null)}
-            activeOpacity={0.7}>
-            <Text
-              style={[
-                styles.tagFilterText,
-                !selectedTag && styles.tagFilterTextActive,
-              ]}>
-              전체
-            </Text>
-          </TouchableOpacity>
-          {allTags.map(tag => (
-            <TouchableOpacity
-              key={tag}
-              style={[
-                styles.tagFilterButton,
-                selectedTag === tag && styles.tagFilterButtonActive,
-              ]}
-              onPress={() => filterByTag(tag)}
-              activeOpacity={0.7}>
-              <Text
-                style={[
-                  styles.tagFilterText,
-                  selectedTag === tag && styles.tagFilterTextActive,
-                ]}>
-                #{tag}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
-
-      {/* 목록 */}
+    <ScreenLayout
+      title="모음"
+      icon="book-outline"
+      showHeader={true}
+      showBorder={false}
+      isLoading={isLoading}
+      loadingMessage="일기를 불러오는 중..."
+      contentStyle={styles.listContainer}>
+      {/* 목록 - 무한 스크롤 최소화 */}
       <FlatList
         data={filteredConfessions}
         renderItem={renderItem}
@@ -257,28 +201,16 @@ export default function MyDiaryScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
+            tintColor={neutral500}
+            colors={[neutral500]}
           />
         }
         showsVerticalScrollIndicator={false}
+        initialNumToRender={10}  // 2026 디자인 시스템: 초기 렌더링 수 제한
+        maxToRenderPerBatch={5}  // 2026 디자인 시스템: 배치당 렌더링 수 제한
+        windowSize={5}  // 2026 디자인 시스템: 윈도우 크기 제한
       />
 
-      {/* 힌트 텍스트 */}
-      {confessions.length > 0 && (
-        <View style={styles.hintContainer}>
-          <Ionicons
-            name="information-circle-outline"
-            size={16}
-            color={colors.textSecondary}
-            style={styles.hintIcon}
-          />
-          <Text style={styles.hintText}>
-            카드를 길게 눌러서 삭제할 수 있습니다
-          </Text>
-        </View>
-      )}
-      
       {/* 업적 모달 */}
       {currentAchievement && (
         <AchievementModal
@@ -287,20 +219,13 @@ export default function MyDiaryScreen() {
           onClose={hideAchievement}
         />
       )}
-    </View>
+    </ScreenLayout>
   );
 }
 
 const getStyles = (colors: typeof lightColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+  listContainer: {
+    paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
   },
   tagFilter: {
     borderBottomWidth: 1,

@@ -7,15 +7,40 @@ import React from 'react';
 import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {Card} from '../ui/Card';
 import {UserStatistics} from '../../types/features';
-import {useTheme} from '../../theme';
-import {spacing, typography, borderRadius} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, typography, borderRadius} from '../../theme';
 
 interface StatisticsCardProps {
   statistics: UserStatistics;
 }
 
 export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    neutral: {
+      50: '#FAFAFA',
+      200: '#E5E5E5',
+      600: '#525252',
+      800: '#262626',
+      900: '#171717',
+    },
+    primary: {
+      50: '#EEF2FF',
+      200: '#C7D2FE',
+      600: '#4F46E5',
+      700: '#4338CA',
+    },
+    primaryScale: {
+      50: '#EEF2FF',
+      200: '#C7D2FE',
+      600: '#4F46E5',
+      700: '#4338CA',
+    },
+  };
+  
+  // primaryScale이 없으면 primary 객체를 사용
+  const primaryColor = typeof colors.primaryScale === 'object' ? colors.primaryScale : colors.primary;
 
   const stats = [
     {
@@ -46,7 +71,7 @@ export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
 
   return (
     <Card variant="elevated" padding="lg">
-      <Text style={[styles.title, {color: colors.neutral[900]}]}>
+      <Text style={[styles.title, {color: typeof colors.neutral === 'object' ? colors.neutral[900] : '#171717'}]}>
         나의 일기 통계
       </Text>
 
@@ -57,18 +82,18 @@ export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
             style={[
               styles.statItem,
               {
-                backgroundColor: colors.neutral[50],
-                borderColor: colors.neutral[200],
+                backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[50] : '#FAFAFA',
+                borderColor: typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5',
               },
             ]}>
             <Text style={styles.statIcon}>{stat.icon}</Text>
-            <Text style={[styles.statValue, {color: colors.primary[600]}]}>
+            <Text style={[styles.statValue, {color: typeof primaryColor === 'object' ? primaryColor[600] : '#4F46E5'}]}>
               {stat.value}
-              <Text style={[styles.statSuffix, {color: colors.neutral[600]}]}>
+              <Text style={[styles.statSuffix, {color: typeof colors.neutral === 'object' ? colors.neutral[600] : '#525252'}]}>
                 {stat.suffix}
               </Text>
             </Text>
-            <Text style={[styles.statLabel, {color: colors.neutral[600]}]}>
+            <Text style={[styles.statLabel, {color: typeof colors.neutral === 'object' ? colors.neutral[600] : '#525252'}]}>
               {stat.label}
             </Text>
           </View>
@@ -77,7 +102,7 @@ export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
 
       {statistics.mostUsedTags.length > 0 && (
         <View style={styles.tagsSection}>
-          <Text style={[styles.sectionTitle, {color: colors.neutral[800]}]}>
+          <Text style={[styles.sectionTitle, {color: typeof colors.neutral === 'object' ? colors.neutral[800] : '#262626'}]}>
             자주 쓰는 태그
           </Text>
           <ScrollView
@@ -90,14 +115,14 @@ export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
                 style={[
                   styles.tagBadge,
                   {
-                    backgroundColor: colors.primary[50],
-                    borderColor: colors.primary[200],
+                    backgroundColor: typeof primaryColor === 'object' ? primaryColor[50] : '#EEF2FF',
+                    borderColor: typeof primaryColor === 'object' ? primaryColor[200] : '#C7D2FE',
                   },
                 ]}>
-                <Text style={[styles.tagText, {color: colors.primary[700]}]}>
+                <Text style={[styles.tagText, {color: typeof primaryColor === 'object' ? primaryColor[700] : '#4338CA'}]}>
                   {item.tag}
                 </Text>
-                <Text style={[styles.tagCount, {color: colors.primary[600]}]}>
+                <Text style={[styles.tagCount, {color: typeof primaryColor === 'object' ? primaryColor[600] : '#4F46E5'}]}>
                   {item.count}
                 </Text>
               </View>
@@ -111,8 +136,8 @@ export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: typography.sizes.lg,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.lg,
   },
   statsGrid: {
@@ -130,27 +155,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statIcon: {
-    fontSize: typography.sizes.xxxl,
+    fontSize: typography.fontSize['5xl'],
     marginBottom: spacing.sm,
   },
   statValue: {
-    fontSize: typography.sizes.xxl,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.fontSize['4xl'],
+    fontWeight: typography.fontWeight.bold,
     marginBottom: spacing.xs / 2,
   },
   statSuffix: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.medium,
   },
   statLabel: {
-    fontSize: typography.sizes.sm,
+    fontSize: typography.fontSize.sm,
   },
   tagsSection: {
     marginTop: spacing.md,
   },
   sectionTitle: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
     marginBottom: spacing.sm,
   },
   tagsList: {
@@ -167,11 +192,11 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   tagText: {
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.medium,
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
   },
   tagCount: {
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.bold,
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.bold,
   },
 });

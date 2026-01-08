@@ -1,7 +1,10 @@
 /**
  * 홈 화면 - 대시보드
  *
- * 앱의 메인 화면으로 통계, 최근 일기, 빠른 액션 제공
+ * 2026 디자인 시스템: 한 화면에 하나의 핵심 행동만
+ * - 일기 쓰기 버튼이 핵심
+ * - 통계는 작고 뉴트럴 컬러로 표시 (시각적 우선순위 낮춤)
+ * - 여백을 적극적으로 사용
  */
 import React, {useState, useEffect, useCallback} from 'react';
 import {
@@ -9,7 +12,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   RefreshControl,
 } from 'react-native';
 import {CompositeNavigationProp} from '@react-navigation/native';
@@ -19,15 +21,15 @@ import {RootStackParamList, BottomTabParamList} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useTheme} from '../contexts/ThemeContext';
-import {spacing, shadows, borderRadius} from '../theme';
+import {spacing, typography} from '../theme';
+import {Button} from '../components/ui/Button';
+import {ScreenLayout} from '../components/ui/ScreenLayout';
 import {lightColors} from '../theme/colors';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import FloatingActionButton from '../components/FloatingActionButton';
-import CleanHeader from '../components/CleanHeader';
-import {LOGO} from '../constants/assets';
 import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useAchievementChecker} from '../hooks/useAchievementChecker';
 import AchievementModal from '../components/AchievementModal';
+import ConfessionCard from '../components/ConfessionCard';
+import {Confession} from '../types';
 
 type HomeScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, 'Home'>,
@@ -39,12 +41,14 @@ type HomeScreenProps = {
 };
 
 export default function HomeScreen({navigation}: HomeScreenProps) {
-  const {colors} = useTheme();
+  const theme = useTheme();
   const [stats, setStats] = useState({
     totalConfessions: 0,
     todayConfessions: 0,
     viewedConfessions: 0,
   });
+  const [todayConfession, setTodayConfession] = useState<Confession | null>(null);
+  const [viewedConfessions, setViewedConfessions] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   
@@ -62,52 +66,157 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
   }, []);
 
   const initializeData = async () => {
-    const id = await getOrCreateDeviceId();
-    setDeviceId(id);
-    if (id) {
-      await fetchStats(id);
+    try {
+      const id = await getOrCreateDeviceId();
+      if (!id) {
+        console.error('Device ID를 생성할 수 없습니다.');
+        return;
+      }
+      setDeviceId(id);
+      await Promise.all([
+        fetchStats(id),
+        fetchTodayConfession(id),
+        fetchViewedConfessions(id),
+      ]);
       // 미확인 업적 체크
-      await checkForNewAchievements(id);
+      try {
+        await checkForNewAchievements(id);
+      } catch (achievementError) {
+        console.error('업적 체크 오류:', achievementError);
+        // 업적 체크 실패해도 앱은 계속 동작
+      }
+    } catch (error) {
+      console.error('데이터 초기화 오류:', error);
+      // 초기화 실패해도 앱은 계속 동작
     }
   };
 
   const fetchStats = async (id: string) => {
     try {
+      if (!id) {
+        console.warn('Device ID가 없습니다.');
+        return;
+      }
+
       // 전체 일기 수
-      const {count: total} = await supabase
+      const {count: total, error: totalError} = await supabase
         .from('confessions')
         .select('*', {count: 'exact', head: true})
         .eq('device_id', id);
 
+      if (totalError) {
+        console.error('전체 일기 수 조회 오류:', totalError);
+      }
+
       // 오늘 작성한 일기 수
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const {count: todayCount} = await supabase
+      const {count: todayCount, error: todayError} = await supabase
         .from('confessions')
         .select('*', {count: 'exact', head: true})
         .eq('device_id', id)
         .gte('created_at', today.toISOString());
 
+      if (todayError) {
+        console.error('오늘 일기 수 조회 오류:', todayError);
+      }
+
       // 본 일기 수
-      const {count: viewedCount} = await supabase
+      const {count: viewedCount, error: viewedError} = await supabase
         .from('viewed_confessions')
         .select('*', {count: 'exact', head: true})
         .eq('device_id', id);
 
+      if (viewedError) {
+        console.error('본 일기 수 조회 오류:', viewedError);
+      }
+
+      // 에러가 있어도 부분적으로라도 업데이트
       setStats({
-        totalConfessions: total || 0,
-        todayConfessions: todayCount || 0,
-        viewedConfessions: viewedCount || 0,
+        totalConfessions: total ?? 0,
+        todayConfessions: todayCount ?? 0,
+        viewedConfessions: viewedCount ?? 0,
       });
     } catch (error) {
       console.error('통계 조회 오류:', error);
+      // 에러 발생 시에도 기본값으로 설정하여 앱이 멈추지 않도록 함
+      setStats(prev => ({
+        ...prev,
+        // 기존 값 유지 또는 0으로 설정
+      }));
+    }
+  };
+
+
+  /**
+   * 오늘 작성한 일기 가져오기
+   */
+  const fetchTodayConfession = async (id: string) => {
+    try {
+      if (!id) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const {data, error} = await supabase
+        .from('confessions')
+        .select('*')
+        .eq('device_id', id)
+        .gte('created_at', today.toISOString())
+        .order('created_at', {ascending: false})
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116은 "no rows returned" 에러
+        console.error('오늘 일기 조회 오류:', error);
+        return;
+      }
+
+      setTodayConfession(data || null);
+    } catch (error) {
+      console.error('오늘 일기 조회 오류:', error);
+    }
+  };
+
+  /**
+   * 본 일기 목록 가져오기 (최근 5개)
+   */
+  const fetchViewedConfessions = async (id: string) => {
+    try {
+      if (!id) return;
+
+      const {data, error} = await supabase
+        .from('viewed_confessions')
+        .select(`
+          id,
+          device_id,
+          confession_id,
+          viewed_at,
+          confession:confessions(*)
+        `)
+        .eq('device_id', id)
+        .order('viewed_at', {ascending: false})
+        .limit(5);
+
+      if (error) {
+        console.error('본 일기 조회 오류:', error);
+        return;
+      }
+
+      setViewedConfessions(data || []);
+    } catch (error) {
+      console.error('본 일기 조회 오류:', error);
     }
   };
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     if (deviceId) {
-      await fetchStats(deviceId);
+      await Promise.all([
+        fetchStats(deviceId),
+        fetchTodayConfession(deviceId),
+        fetchViewedConfessions(deviceId),
+      ]);
     }
     setIsRefreshing(false);
   }, [deviceId]);
@@ -116,151 +225,121 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
     navigation.navigate('Write');
   };
 
-  const styles = getStyles(colors);
+  // colors가 없으면 기본값 사용
+  const safeColors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
+
+  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
+  const neutral500 = typeof safeColors.neutral === 'object' ? safeColors.neutral[500] : '#737373';
+
+  const styles = getStyles(safeColors);
 
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <CleanHeader
-        title="나의 오늘, 너의 오늘"
-        subtitle="당신의 하루를 기록하고 공유하세요"
-        logo={LOGO.main}
-      />
-      
-      {/* 개발자 도구 버튼 (오른쪽 상단) */}
-      <View style={styles.devTools}>
-        <TouchableOpacity
-          style={styles.devButton}
-          onPress={() => navigation.navigate('IconShowcase' as any)}
-          activeOpacity={0.7}>
-          <Ionicons name="happy-outline" size={20} color={colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.devButton}
-          onPress={() => navigation.navigate('AnimationShowcase' as any)}
-          activeOpacity={0.7}>
-          <Ionicons name="color-wand-outline" size={20} color={colors.secondary} />
-        </TouchableOpacity>
-      </View>
-
+    <ScreenLayout
+      showHeader={false}
+      isLoading={false}
+      contentStyle={styles.scrollContainer}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={neutral500}
           />
         }>
 
         <View style={styles.content}>
-          {/* 통계 카드 */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Ionicons name="document-text" size={24} color={colors.primary} />
-              </View>
-              <Text style={[styles.statValue, {color: colors.primary}]}>
-                {stats.totalConfessions}
-              </Text>
-              <Text style={styles.statLabel}>전체 일기</Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Ionicons name="sparkles" size={24} color={colors.secondary} />
-              </View>
-              <Text style={[styles.statValue, {color: colors.secondary}]}>
-                {stats.todayConfessions}
-              </Text>
-              <Text style={styles.statLabel}>오늘 작성</Text>
-            </View>
-
-            <View style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Ionicons name="eye" size={24} color={colors.accent} />
-              </View>
-              <Text style={[styles.statValue, {color: colors.accent}]}>
-                {stats.viewedConfessions}
-              </Text>
-              <Text style={styles.statLabel}>본 일기</Text>
-            </View>
-          </View>
-
-          {/* 빠른 액션 */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Quick Actions</Text>
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={navigateToWrite}
-                activeOpacity={0.8}>
-                <View style={styles.actionIcon}>
-                  <Ionicons
-                    name="create-outline"
-                    size={26}
-                    color={colors.primary}
-                  />
-                </View>
-                <Text style={styles.actionText}>일기 쓰기</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => navigation.navigate('MyDiary')}
-                activeOpacity={0.8}>
-                <View style={styles.actionIcon}>
-                  <Ionicons
-                    name="book-outline"
-                    size={26}
-                    color={colors.secondary}
-                  />
-                </View>
-                <Text style={styles.actionText}>내 일기장</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => navigation.navigate('ViewedDiary')}
-                activeOpacity={0.8}>
-                <View style={styles.actionIcon}>
-                  <Ionicons
-                    name="eye-outline"
-                    size={26}
-                    color={colors.accent}
-                  />
-                </View>
-                <Text style={styles.actionText}>본 일기</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* 오늘의 일기 안내 */}
+          {/* 오늘 일기가 없을 때: 쓰기 버튼 + 빈 상태 */}
           {stats.todayConfessions === 0 && (
-            <AnimatedEmptyState
-              title="오늘의 일기를 작성해보세요"
-              description="당신의 하루를 자유롭게 기록해보세요"
-              size={200}
-            />
+            <>
+              {/* 상단 여백 */}
+              <View style={styles.topSpacing} />
+
+              {/* 핵심 행동: 일기 쓰기 버튼 */}
+              <View style={styles.writeSection}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onPress={navigateToWrite}
+                  fullWidth
+                  style={styles.writeButton}>
+                  오늘의 이야기 쓰기
+                </Button>
+              </View>
+
+              {/* 빈 상태 */}
+              {stats.totalConfessions === 0 && (
+                <View style={styles.emptyStateContainer}>
+                  <AnimatedEmptyState
+                    title="오늘의 일기가 없습니다"
+                    description="오늘 하루 있었던 일을 자유롭게 기록해보세요"
+                    size={200}
+                  />
+                </View>
+              )}
+            </>
           )}
 
+          {/* 오늘 일기가 있을 때: 오늘 일기 + 본 일기들만 표시 */}
           {stats.todayConfessions > 0 && (
-            <View style={styles.todayMessageContainer}>
-              <Ionicons name="checkmark-circle" size={48} color={colors.success} />
-              <Text style={styles.todayMessageTitle}>
-                오늘의 일기를 작성했어요! 🎉
-              </Text>
-              <Text style={styles.todayMessageDescription}>
-                내 일기장에서 확인하거나 다른 사람의 하루를 들여다보세요
-              </Text>
-            </View>
+            <>
+              {/* 상단 여백 */}
+              <View style={styles.topSpacing} />
+
+              {/* 오늘 작성한 일기 */}
+              {todayConfession && (
+                <View style={styles.todaySection}>
+                  <Text style={styles.sectionTitle}>
+                    오늘의 이야기
+                  </Text>
+                  <ConfessionCard
+                    content={todayConfession.content}
+                    timestamp={todayConfession.created_at}
+                    mood={todayConfession.mood}
+                    images={todayConfession.images}
+                    tags={todayConfession.tags}
+                    onPress={() => navigation.navigate('Reveal', {confessionId: todayConfession.id})}
+                    index={0}
+                  />
+                </View>
+              )}
+
+              {/* 본 일기들 */}
+              {viewedConfessions.length > 0 && (
+                <View style={styles.viewedSection}>
+                  <Text style={styles.sectionTitle}>
+                    읽은 이야기
+                  </Text>
+                  {viewedConfessions.map((item, index) => {
+                    const confession = Array.isArray(item.confession) 
+                      ? item.confession[0] 
+                      : item.confession;
+                    
+                    if (!confession) return null;
+
+                    return (
+                      <ConfessionCard
+                        key={item.id}
+                        content={confession.content}
+                        timestamp={item.viewed_at}
+                        mood={confession.mood}
+                        images={confession.images}
+                        tags={confession.tags}
+                        onPress={() => navigation.navigate('Reveal', {confessionId: confession.id})}
+                        index={index + 1}
+                      />
+                    );
+                  })}
+                </View>
+              )}
+            </>
           )}
+
+          {/* 하단 여백 */}
+          <View style={styles.bottomSpacing} />
         </View>
       </ScrollView>
 
-      {/* 플로팅 액션 버튼 */}
-      <FloatingActionButton onPress={navigateToWrite} icon="create-outline" />
-      
       {/* 업적 모달 */}
       {currentAchievement && (
         <AchievementModal
@@ -269,126 +348,57 @@ export default function HomeScreen({navigation}: HomeScreenProps) {
           onClose={hideAchievement}
         />
       )}
-    </View>
+    </ScreenLayout>
   );
 }
 
-const getStyles = (colors: typeof lightColors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: 'transparent', // 투명하게
+const getStyles = (colors: typeof lightColors) => {
+  const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
+  
+  return StyleSheet.create({
+    scrollContainer: {
+      paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
     },
     content: {
-      paddingHorizontal: spacing.lg,
       paddingTop: spacing.lg,
-      paddingBottom: 220, // 하단 네비(70) + 플로팅 버튼(60) + 충분한 여유 공간
+      paddingBottom: 120, // 하단 네비 + 여유 공간
     },
-    statsContainer: {
-      flexDirection: 'row',
-      gap: spacing.md,
-      marginBottom: spacing.md,
+    topSpacing: {
+      height: spacing.lg,
     },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.surface + 'F0', // 94% 불투명도
-      borderRadius: borderRadius.lg,
-      padding: spacing.lg,
-      alignItems: 'center',
-      ...shadows.small,
+    bottomSpacing: {
+      height: spacing.xl,
     },
-    statIconContainer: {
-      width: 48,
-      height: 48,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.md,
+    // 쓰기 섹션
+    writeSection: {
+      marginBottom: spacing.xl,
+      paddingHorizontal: spacing.xl,
     },
-    statValue: {
-      fontSize: 26,
-      fontWeight: '800',
-      marginBottom: spacing.xs / 2,
+    writeButton: {
+      // Button 컴포넌트에서 스타일 관리
     },
-    statLabel: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      fontWeight: '600',
+    // 오늘 일기 섹션
+    todaySection: {
+      marginBottom: spacing['2xl'],
+      paddingHorizontal: spacing.xl,
     },
-    section: {
-      marginBottom: spacing.md,
+    // 본 일기 섹션
+    viewedSection: {
+      marginBottom: spacing.xl,
+      paddingHorizontal: spacing.xl,
     },
     sectionTitle: {
-      fontSize: 16,
-      fontWeight: '700',
-      color: colors.textPrimary,
-      letterSpacing: 0.5,
-      marginBottom: spacing.md,
+      fontSize: typography.fontSize['2xl'],
+      fontWeight: typography.fontWeight.medium,
+      marginBottom: spacing.lg,
+      color: neutral700,
+      letterSpacing: typography.letterSpacing.tight,
     },
-    actionsContainer: {
-      flexDirection: 'row',
-      gap: spacing.md,
-    },
-    actionCard: {
-      flex: 1,
-      backgroundColor: colors.surface + 'F0', // 94% 불투명도
-      borderRadius: borderRadius.lg,
-      padding: spacing.lg,
-      alignItems: 'center',
-      ...shadows.small,
-    },
-    actionIcon: {
-      width: 56,
-      height: 56,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.md,
-    },
-    actionText: {
-      fontSize: 13,
-      color: colors.textPrimary,
-      fontWeight: '700',
-    },
-    todayMessageContainer: {
-      alignItems: 'center',
+    // 빈 상태
+    emptyStateContainer: {
       paddingVertical: spacing['2xl'],
       paddingHorizontal: spacing.xl,
-      backgroundColor: colors.surface + 'F0', // 94% 불투명도
-      borderRadius: borderRadius.xl,
-      marginTop: spacing.lg,
-      ...shadows.small,
-    },
-    todayMessageTitle: {
-      fontSize: 18,
-      fontWeight: '700',
-      color: colors.textPrimary,
-      marginTop: spacing.md,
-      marginBottom: spacing.xs,
-      textAlign: 'center',
-    },
-    todayMessageDescription: {
-      fontSize: 14,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      lineHeight: 20,
-    },
-    devTools: {
-      position: 'absolute',
-      top: 60,
-      right: spacing.lg,
-      flexDirection: 'row',
-      gap: spacing.xs,
-      zIndex: 10,
-    },
-    devButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.surface + 'F0', // 94% 불투명도
-      alignItems: 'center',
-      justifyContent: 'center',
-      ...shadows.medium,
-      borderWidth: 1,
-      borderColor: colors.border,
     },
   });
+};
 

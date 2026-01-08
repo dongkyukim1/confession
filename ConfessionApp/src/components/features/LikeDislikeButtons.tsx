@@ -6,8 +6,8 @@
 import React from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {LikeType} from '../../types/database';
-import {useTheme} from '../../theme';
-import {spacing, borderRadius, typography} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, borderRadius, typography} from '../../theme';
 import {triggerHaptic} from '../../utils/haptics';
 
 interface LikeDislikeButtonsProps {
@@ -27,7 +27,25 @@ export const LikeDislikeButtons = ({
   onDislike,
   disabled = false,
 }: LikeDislikeButtonsProps) => {
-  const {colors} = useTheme();
+  const theme = useTheme();
+  // colors가 객체인지 확인하고 안전하게 처리
+  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
+    success: {
+      50: '#F0FDF4',
+      500: '#21D07C', // 틴더 그린
+      700: '#15803D',
+    },
+    danger: {
+      50: '#FEF2F2',
+      500: '#E94E4E', // 틴더 레드
+      700: '#B91C1C',
+    },
+    neutral: {
+      100: '#F5F5F5',
+      200: '#E5E5E5',
+      600: '#525252',
+    },
+  };
 
   const handleLike = () => {
     if (disabled) return;
@@ -86,11 +104,11 @@ export const LikeDislikeButtons = ({
           styles.button,
           {
             backgroundColor: isDisliked
-              ? colors.danger[50]
-              : colors.neutral[100],
+              ? (typeof colors.danger === 'object' ? colors.danger[50] : '#FEF2F2')
+              : (typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5'),
             borderColor: isDisliked
-              ? colors.danger[500]
-              : colors.neutral[200],
+              ? (typeof colors.danger === 'object' ? colors.danger[500] : '#E94E4E')
+              : (typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5'),
             opacity: disabled ? 0.5 : 1,
           },
         ]}>
@@ -102,7 +120,9 @@ export const LikeDislikeButtons = ({
             style={[
               styles.count,
               {
-                color: isDisliked ? colors.danger[700] : colors.neutral[600],
+                color: isDisliked 
+                  ? (typeof colors.danger === 'object' ? colors.danger[700] : '#B91C1C')
+                  : (typeof colors.neutral === 'object' ? colors.neutral[600] : '#525252'),
               },
             ]}>
             {dislikeCount}
@@ -130,15 +150,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   icon: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.fontSize.xl,
   },
   activeIcon: {
     transform: [{scale: 1.1}],
   },
   count: {
-    fontSize: typography.sizes.md,
-    fontWeight: typography.weights.semibold,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
   },
 });
+
 
 

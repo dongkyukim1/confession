@@ -21,3 +21,4 @@ CREATE INDEX IF NOT EXISTS idx_confessions_tags ON confessions USING GIN (tags);
 
 
 
+

@@ -1,8 +1,10 @@
 /**
  * 고백 카드 공통 컴포넌트
  * 
- * 미니멀하고 세련된 디자인의 일기 카드
- * 리치 컨텐츠 표시 지원 (이미지, 서식, 기분 배지)
+ * 2026 디자인 시스템: 플랫 카드 스타일
+ * - 그림자 제거
+ * - 날짜/시간은 작고 뉴트럴 컬러
+ * - viewCount는 작고 뉴트럴 컬러 (비교 유도하지 않음)
  */
 import React, {useState} from 'react';
 import {
@@ -13,11 +15,10 @@ import {
   Dimensions,
   Image,
   ScrollView,
-  Animated,
   Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 
@@ -44,7 +45,6 @@ export default function ConfessionCard({
   mood,
   images,
   tags,
-  index = 0,
 }: ConfessionCardProps) {
   const {colors} = useTheme();
   const [imageModalVisible, setImageModalVisible] = useState(false);
@@ -226,23 +226,30 @@ export default function ConfessionCard({
   return Content;
 }
 
-const getStyles = (colors: typeof lightColors) => StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    ...shadows.medium,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  content: {
-    ...typography.styles.body,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
-    lineHeight: 24,
-  },
+const getStyles = (colors: typeof lightColors) => {
+  const neutral0 = typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF';
+  const neutral200 = typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5';
+  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
+  const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
+  const neutral900 = typeof colors.neutral === 'object' ? colors.neutral[900] : '#171717';
+  
+  return StyleSheet.create({
+    card: {
+      backgroundColor: neutral0,
+      borderRadius: borderRadius['2xl'], // 더 둥근 모서리
+      padding: spacing.xl, // 더 넉넉한 패딩
+      marginBottom: spacing.lg, // 카드 간격 증가
+      borderWidth: 1,
+      borderColor: neutral200,
+    },
+    content: {
+      fontSize: typography.fontSize.base,
+      fontWeight: typography.fontWeight.regular,
+      color: neutral900,
+      marginBottom: spacing.md,
+      lineHeight: typography.lineHeight.relaxed * typography.fontSize.base, // 더 넉넉한 행간
+      letterSpacing: typography.letterSpacing.normal,
+    },
   imagesGallery: {
     marginBottom: spacing.md,
   },
@@ -252,14 +259,14 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   galleryImage: {
     width: 120,
     height: 120,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.backgroundAlt,
+    borderRadius: borderRadius.lg, // 더 둥근 모서리
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5',
   },
   tagsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -269,32 +276,31 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     alignItems: 'center',
   },
   moodBadge: {
-    backgroundColor: colors.backgroundAlt,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5',
     borderRadius: borderRadius.full,
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.small,
     marginLeft: spacing.sm,
   },
   moodEmoji: {
-    fontSize: 20,
+    fontSize: 22,
   },
   tag: {
-    backgroundColor: colors.primary,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5',
     paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg, // 더 둥근 모서리
   },
   tagText: {
-    fontSize: 11,
-    color: colors.surface,
-    fontWeight: typography.fontWeight.semibold,
+    fontSize: typography.fontSize.xs,
+    color: neutral700,
+    fontWeight: typography.fontWeight.regular,
   },
   moreTagsText: {
-    ...typography.styles.caption,
-    color: colors.textTertiary,
+    fontSize: typography.fontSize.xs,
+    color: neutral500,
     paddingVertical: spacing.xs,
   },
   footer: {
@@ -303,11 +309,13 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     alignItems: 'center',
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: neutral200,
   },
   timestamp: {
-    ...typography.styles.small,
-    color: colors.textTertiary,
+    fontSize: typography.fontSize.xs,
+    color: typeof colors.neutral === 'object' ? colors.neutral[500] : colors.textTertiary,  // 작고 뉴트럴 컬러
+    fontWeight: typography.fontWeight.regular,  // Bold 최소화
+    letterSpacing: typography.letterSpacing.normal,  // 자간 증가
   },
   viewCountContainer: {
     flexDirection: 'row',
@@ -319,12 +327,13 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   },
   viewCount: {
     ...typography.styles.small,
-    color: colors.textTertiary,
-    fontWeight: typography.fontWeight.semibold,
+    color: typeof colors.neutral === 'object' ? colors.neutral[500] : colors.textTertiary,  // 작고 뉴트럴 컬러 (비교 유도하지 않음)
+    fontWeight: typography.fontWeight.regular,  // Bold 최소화
+    letterSpacing: typography.letterSpacing.normal,  // 자간 증가
   },
   imageModalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[1000] : '#000000',
   },
   imageModalOverlay: {
     flex: 1,
@@ -344,15 +353,15 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   imageCounter: {
     position: 'absolute',
     top: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[800] : 'rgba(0, 0, 0, 0.6)',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
   },
   imageCounterText: {
-    color: colors.surface,
+    color: neutral0,
     fontSize: 14,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.medium,
   },
   imageNavigation: {
     position: 'absolute',
@@ -362,7 +371,7 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   navButton: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[800] : 'rgba(0, 0, 0, 0.5)',
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -373,13 +382,13 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     position: 'absolute',
     top: 50,
     right: spacing.lg,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[800] : 'rgba(0, 0, 0, 0.6)',
     width: 44,
     height: 44,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
-});
-
+  });
+};
 

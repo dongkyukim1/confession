@@ -289,3 +289,4 @@ CREATE INDEX idx_achievements_viewed ON user_achievements(device_id, viewed);
 **작성자**: AI Assistant  
 **버전**: 1.0.0
 
+

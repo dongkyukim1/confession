@@ -12,8 +12,8 @@ import {
   Dimensions,
   ViewStyle,
 } from 'react-native';
-import {useTheme} from '../../theme';
-import {spacing, borderRadius, typography, shadows} from '../../theme/tokens';
+import {useTheme} from '../../contexts/ThemeContext';
+import {spacing, borderRadius, typography, shadows} from '../../theme';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -146,15 +146,15 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   icon: {
-    fontSize: typography.sizes.xl,
+    fontSize: typography.fontSize.xl,
     color: '#ffffff',
     marginRight: spacing.md,
   },
   message: {
     flex: 1,
-    fontSize: typography.sizes.md,
+    fontSize: typography.fontSize.base,
     color: '#ffffff',
-    fontWeight: typography.weights.medium,
+    fontWeight: typography.fontWeight.medium,
   },
 });
 

@@ -24,6 +24,7 @@ interface ScreenLayoutProps {
   loadingMessage?: string;
   contentStyle?: ViewStyle;
   safeAreaEdges?: ('top' | 'bottom' | 'left' | 'right')[];
+  backgroundComponent?: React.ReactNode;
 }
 
 export const ScreenLayout = ({
@@ -37,6 +38,7 @@ export const ScreenLayout = ({
   loadingMessage = '로딩 중...',
   contentStyle,
   safeAreaEdges = ['top'],
+  backgroundComponent,
 }: ScreenLayoutProps) => {
   const theme = useTheme();
   const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
@@ -46,6 +48,7 @@ export const ScreenLayout = ({
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container} edges={safeAreaEdges}>
+        {backgroundComponent}
         {showHeader && title && (
           <CleanHeader
             title={title}
@@ -65,6 +68,7 @@ export const ScreenLayout = ({
 
   return (
     <SafeAreaView style={styles.container} edges={safeAreaEdges}>
+      {backgroundComponent}
       {showHeader && title && (
         <CleanHeader
           title={title}
@@ -84,7 +88,7 @@ const getStyles = (colors: typeof lightColors) =>
   StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: 'transparent',
     },
     content: {
       flex: 1,

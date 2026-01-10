@@ -37,3 +37,6 @@ export async function getOrCreateDeviceId(): Promise<string> {
   }
 }
 
+
+// Alias for backward compatibility
+export const getDeviceId = getOrCreateDeviceId;

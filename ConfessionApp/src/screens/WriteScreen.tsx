@@ -26,7 +26,7 @@ import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../contexts/ModalContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {spacing, typography} from '../theme';
+import {spacing, typography, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 import MoodSelector from '../components/MoodSelector';
@@ -36,6 +36,8 @@ import {useAchievementChecker} from '../hooks/useAchievementChecker';
 import AchievementModal from '../components/AchievementModal';
 import {checkStreakAchievement} from '../utils/achievementManager';
 import {Button} from '../components/ui/Button';
+import FontSelector from '../components/FontSelector';
+import {useFont} from '../contexts/FontContext';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -54,10 +56,14 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [selectedMood, setSelectedMood] = useState<string | undefined>();
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const [fontSelectorVisible, setFontSelectorVisible] = useState(false);
   const {showModal} = useModal();
   const theme = useTheme();
   // colors가 객체인지 확인하고 안전하게 처리
   const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
+  
+  // 폰트 시스템
+  const {getFontFamily, fontOption} = useFont();
   
   // 업적 시스템
   const {
@@ -182,6 +188,20 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
           <Ionicons name="close" size={24} color={neutral500} />
         </TouchableOpacity>
+        
+        <Text style={styles.headerTitle}>일기 작성</Text>
+        
+        {/* 폰트 변경 버튼 - 텍스트로 표시 */}
+        <TouchableOpacity
+          style={styles.fontButton}
+          onPress={() => {
+            console.log('🎨 폰트 버튼 클릭!');
+            setFontSelectorVisible(true);
+          }}
+          activeOpacity={0.7}
+          hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+          <Text style={styles.fontButtonText}>{fontOption.displayName}</Text>
+        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView
@@ -199,7 +219,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           {/* 일기 입력 - 화면 중앙에 큰 여백과 함께 */}
           <View style={styles.inputSection}>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, {fontFamily: getFontFamily()}]}
               placeholder="오늘 하루는 어땠나요?"
               placeholderTextColor={neutral400}
               multiline
@@ -260,7 +280,9 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
             onPress={handleSubmit}
             disabled={!confession.trim() || isLoading || isOverLimit}
             loading={isLoading}
-            fullWidth>
+            fullWidth
+            accessibilityLabel="일기 작성 완료"
+            accessibilityHint="일기를 저장하고 다른 사람의 일기를 볼 수 있습니다">
             완료
           </Button>
         </View>
@@ -274,6 +296,12 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           onClose={hideAchievement}
         />
       )}
+      
+      {/* 폰트 선택 모달 */}
+      <FontSelector
+        visible={fontSelectorVisible}
+        onClose={() => setFontSelectorVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -285,15 +313,34 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   },
   // 2026 디자인 시스템: 헤더 최소화
   minimalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: typeof colors.neutral === 'object' ? colors.neutral[700] : colors.textPrimary,
   },
   backButton: {
     width: 40,
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fontButton: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5',
+    borderRadius: borderRadius.md,
+  },
+  fontButtonText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: typeof colors.neutral === 'object' ? colors.neutral[700] : colors.textPrimary,
   },
   keyboardView: {
     flex: 1,
@@ -327,7 +374,8 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     lineHeight: typography.fontSize.base * typography.lineHeight.relaxed,  // 행간 증가
     letterSpacing: typography.letterSpacing.normal,  // 자간 증가
     textAlignVertical: 'top',
-    backgroundColor: 'transparent',  // 배경 제거
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[50] : colors.backgroundAlt,  // 2026 디자인 시스템: 얕은 배경 추가
+    borderRadius: borderRadius.xl,  // 둥근 모서리
   },
   // 글자 수 카운터 - 작고 뉴트럴 컬러
   charCount: {

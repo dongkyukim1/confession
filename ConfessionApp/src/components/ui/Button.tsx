@@ -1,292 +1,219 @@
 /**
- * Button Component
- *
- * 2026 디자인 시스템: 버튼은 눈에 띄지 않게
- * - 뉴트럴 컬러 기본
- * - 그림자 제거 또는 매우 얕은 그림자
- * - Flat 스타일 우선
- * - 브랜드 컬러는 중요한 CTA에만 사용
+ * Button Component - 프로덕션 레벨 (2026 디자인 시스템)
+ * 
+ * 다양한 variants, sizes, states 지원
  */
-import React from 'react';
+import React, {useRef} from 'react';
 import {
   TouchableOpacity,
   Text,
   StyleSheet,
+  Animated,
   ActivityIndicator,
   ViewStyle,
   TextStyle,
-  GestureResponderEvent,
 } from 'react-native';
-import {useTheme} from '../../contexts/ThemeContext';
-import {spacing, borderRadius, typography, shadows} from '../../theme';
-import {triggerHaptic} from '../../utils/haptics';
+import {lightColors} from '../theme/colors';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'destructive' | 'accent';
-type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
-  children: React.ReactNode;
-  onPress?: (event: GestureResponderEvent) => void;
+  title: string;
+  onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
+  icon?: string;
+  iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
   style?: ViewStyle;
-  textStyle?: TextStyle;
-  haptic?: boolean;
-  icon?: React.ReactNode;
-  iconPosition?: 'left' | 'right';
 }
 
-export const Button = ({
-  children,
+export function Button({
+  title,
   onPress,
   variant = 'primary',
   size = 'md',
   disabled = false,
   loading = false,
-  fullWidth = false,
-  style,
-  textStyle,
-  haptic = true,
   icon,
   iconPosition = 'left',
-}: ButtonProps) => {
-  const theme = useTheme();
-  // colors가 객체인지 확인하고 안전하게 처리
-  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
-    primary: '#FD5068',
-    primaryScale: {
-      50: '#FFF1F2',
-      100: '#FFE4E6',
-      200: '#FECDD3',
-      300: '#FDA4AF',
-      400: '#FB7185',
-      500: '#FD5068',
-      600: '#E8395F',
-      700: '#BE185D',
-      800: '#9F1239',
-      900: '#881337',
-    },
-    neutral: {
-      0: '#FFFFFF',
-      50: '#FAFAFA',
-      100: '#F5F5F5',
-      200: '#E5E5E5',
-      300: '#D4D4D4',
-      400: '#A3A3A3',
-      500: '#737373',
-      600: '#525252',
-      700: '#404040',
-      800: '#262626',
-      900: '#171717',
-      1000: '#000000',
-    },
-    error: {
-      50: '#FEF2F2',
-      100: '#FEE2E2',
-      500: '#EF4444',
-      600: '#DC2626',
-      700: '#B91C1C',
-    },
-  };
-  const isDark = theme?.isDark || false;
-  
-  // primaryScale이 없으면 primary 문자열을 사용
-  const primaryColor = typeof colors.primaryScale === 'object' && colors.primaryScale?.[500] 
-    ? colors.primaryScale[500] 
-    : (typeof colors.primary === 'string' ? colors.primary : '#FD5068');
+  fullWidth = false,
+  style,
+}: ButtonProps) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
-  const handlePress = (event: GestureResponderEvent) => {
-    if (disabled || loading) return;
-    if (haptic) {
-      triggerHaptic('impactLight');
-    }
-    onPress?.(event);
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const getVariantStyles = (): {
-    container: ViewStyle;
-    text: TextStyle;
-  } => {
-    // 2026 디자인 시스템: 그림자 제거 또는 매우 얕은 그림자
-    const baseContainer: ViewStyle = {
-      // 그림자 제거 (Flat 스타일)
-    };
-    // 2026 디자인 시스템: Bold 최소화
-    const baseText: TextStyle = {
-      fontWeight: typography.fontWeight.regular,  // semibold → regular
-    };
-
-    const neutral0 = typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF';
-    const neutral200 = typeof colors.neutral === 'object' ? colors.neutral[200] : '#E8E8E8';
-    const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
-    const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
-    const neutral900 = typeof colors.neutral === 'object' ? colors.neutral[900] : '#171717';
-    const error500 = typeof colors.error === 'object' ? colors.error[500] : '#EF4444';
-    const accentColor = typeof colors.accent === 'string' ? colors.accent : '#EC4899';
-    
-    switch (variant) {
-      case 'primary':
-        // 뉴트럴 700 배경, 뉴트럴 0 텍스트 (눈에 띄지 않게)
-        return {
-          container: {
-            backgroundColor: neutral700,
-          },
-          text: {
-            ...baseText,
-            color: neutral0,
-          },
-        };
-      case 'secondary':
-        // 투명 배경, 뉴트럴 700 텍스트, 얕은 테두리
-        return {
-          container: {
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            borderColor: neutral200,  // 매우 얕은 테두리
-          },
-          text: {
-            ...baseText,
-            color: neutral700,
-          },
-        };
-      case 'ghost':
-        // 완전 투명, 뉴트럴 500 텍스트
-        return {
-          container: {
-            backgroundColor: 'transparent',
-          },
-          text: {
-            ...baseText,
-            color: neutral500,
-          },
-        };
-      case 'destructive':
-        return {
-          container: {
-            backgroundColor: error500,
-          },
-          text: {
-            ...baseText,
-            color: neutral0,
-          },
-        };
-      case 'accent':
-        // 브랜드 컬러 (좋아요, 중요한 액션에만 사용)
-        return {
-          container: {
-            backgroundColor: accentColor,
-          },
-          text: {
-            ...baseText,
-            color: neutral0,
-          },
-        };
-    }
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 3,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const getSizeStyles = (): {
-    container: ViewStyle;
-    text: TextStyle;
-  } => {
-    switch (size) {
-      case 'sm':
-        return {
-          container: {
-            paddingVertical: spacing.sm,
-            paddingHorizontal: spacing.md,
-            borderRadius: borderRadius.md,
-          },
-          text: {
-            fontSize: typography.fontSize.sm,
-          },
-        };
-      case 'md':
-        return {
-          container: {
-            paddingVertical: spacing.md,
-            paddingHorizontal: spacing.lg,
-            borderRadius: borderRadius.xl, // 틴더 스타일: 더 둥근 모서리
-          },
-          text: {
-            fontSize: typography.fontSize.base,
-          },
-        };
-      case 'lg':
-        return {
-          container: {
-            paddingVertical: spacing.lg - 6,
-            paddingHorizontal: spacing.xl,
-            borderRadius: borderRadius.xl, // 틴더 스타일: 더 둥근 모서리
-          },
-          text: {
-            fontSize: typography.fontSize.lg,
-          },
-        };
-    }
-  };
-
-  const variantStyles = getVariantStyles();
-  const sizeStyles = getSizeStyles();
-
-  const containerStyle: ViewStyle[] = [
-    styles.container,
-    variantStyles.container,
-    sizeStyles.container,
+  const containerStyle = [
+    styles.button,
+    styles[variant],
+    styles[size],
     fullWidth && styles.fullWidth,
-    (disabled || loading) && styles.disabled,
+    disabled && styles.disabled,
     style,
   ];
 
-  const buttonTextStyle: TextStyle[] = [
+  const textStyle = [
     styles.text,
-    variantStyles.text,
-    sizeStyles.text,
-    (disabled || loading) && styles.disabledText,
-    textStyle,
+    styles[`${variant}Text` as keyof typeof styles] as TextStyle,
+    styles[`${size}Text` as keyof typeof styles] as TextStyle,
   ];
 
+  const iconSize = size === 'sm' ? 16 : size === 'lg' ? 24 : 20;
+  const iconColor = getIconColor(variant, disabled);
+
   return (
-    <TouchableOpacity
-      style={containerStyle}
-      onPress={handlePress}
-      disabled={disabled || loading}
-      activeOpacity={0.7}>
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'ghost' ? primaryColor : (typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF')}
-          size="small"
-        />
-      ) : (
-        <>
-          {icon && iconPosition === 'left' && icon}
-          <Text style={buttonTextStyle}>{children}</Text>
-          {icon && iconPosition === 'right' && icon}
-        </>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={{transform: [{scale: scaleAnim}]}}>
+      <TouchableOpacity
+        style={containerStyle}
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled || loading}
+        activeOpacity={0.8}>
+        {loading ? (
+          <ActivityIndicator size="small" color={iconColor} />
+        ) : (
+          <>
+            {icon && iconPosition === 'left' && (
+              <Ionicons name={icon} size={iconSize} color={iconColor} style={styles.iconLeft} />
+            )}
+            <Text style={textStyle}>{title}</Text>
+            {icon && iconPosition === 'right' && (
+              <Ionicons name={icon} size={iconSize} color={iconColor} style={styles.iconRight} />
+            )}
+          </>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
-};
+}
+
+function getIconColor(variant: ButtonVariant, disabled: boolean): string {
+  if (disabled) return lightColors.textDisabled;
+  
+  switch (variant) {
+    case 'primary':
+    case 'danger':
+      return '#FFFFFF';
+    case 'secondary':
+      return lightColors.primary;
+    case 'outline':
+      return lightColors.primary;
+    case 'ghost':
+      return lightColors.textPrimary;
+    default:
+      return '#FFFFFF';
+  }
+}
 
 const styles = StyleSheet.create({
-  container: {
+  button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  
+  // Variants
+  primary: {
+    backgroundColor: lightColors.primary,
+  },
+  secondary: {
+    backgroundColor: lightColors.neutral[100],
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: lightColors.border,
+  },
+  ghost: {
+    backgroundColor: 'transparent',
+  },
+  danger: {
+    backgroundColor: lightColors.error,
+  },
+  
+  // Sizes
+  sm: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  md: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  lg: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  
+  // States
+  disabled: {
+    opacity: 0.5,
   },
   fullWidth: {
     width: '100%',
   },
+  
+  // Text styles
   text: {
-    textAlign: 'center',
+    fontWeight: '600',
   },
-  disabled: {
-    opacity: 0.5,
+  primaryText: {
+    color: '#FFFFFF',
   },
-  disabledText: {
-    opacity: 0.7,
+  secondaryText: {
+    color: lightColors.primary,
+  },
+  outlineText: {
+    color: lightColors.primary,
+  },
+  ghostText: {
+    color: lightColors.textPrimary,
+  },
+  dangerText: {
+    color: '#FFFFFF',
+  },
+  
+  // Text sizes
+  smText: {
+    fontSize: 13,
+  },
+  mdText: {
+    fontSize: 15,
+  },
+  lgText: {
+    fontSize: 17,
+  },
+  
+  // Icons
+  iconLeft: {
+    marginRight: 8,
+  },
+  iconRight: {
+    marginLeft: 8,
   },
 });

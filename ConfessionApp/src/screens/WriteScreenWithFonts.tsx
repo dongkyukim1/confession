@@ -31,6 +31,7 @@ import {useFont} from '../contexts/FontContext';
 import MoodSelector from '../components/MoodSelector';
 import TagInput from '../components/TagInput';
 import ImagePickerComponent from '../components/ImagePicker';
+import FontSelector from '../components/FontSelector';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -50,6 +51,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [selectedMood, setSelectedMood] = useState<string | undefined>();
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
+  const [fontSelectorVisible, setFontSelectorVisible] = useState(false);
   const {showModal} = useModal();
   const {colors} = useTheme();
   const {getFontFamily, fontOption} = useFont();
@@ -145,14 +147,23 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           </View>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>일기 쓰기</Text>
-        <View style={styles.headerRight}>
+        <TouchableOpacity 
+          style={styles.headerRight}
+          onPress={() => {
+            console.log('🎨 폰트 버튼 클릭!');
+            setFontSelectorVisible(true);
+          }}
+          activeOpacity={0.7}
+          hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
           <Text style={styles.fontLabel}>{fontOption.displayName}</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
+      {/* 컨텐츠 영역 */}
       <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -225,46 +236,75 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
             <TagInput tags={tags} onTagsChange={setTags} />
           </View>
         </ScrollView>
+      </KeyboardAvoidingView>
 
-        {/* 하단 제출 버튼 */}
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              (!confession.trim() || isLoading || isOverLimit) && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={!confession.trim() || isLoading || isOverLimit}
-            activeOpacity={0.8}>
+      {/* 하단 제출 버튼 - SafeAreaView 직접 자식으로 */}
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            (!confession.trim() || isLoading || isOverLimit) && styles.submitButtonDisabled,
+          ]}
+          onPress={handleSubmit}
+          disabled={!confession.trim() || isLoading || isOverLimit}
+          activeOpacity={0.85}>
+          <LinearGradient
+            colors={
+              confession.trim() && !isOverLimit
+                ? ['#667EEA', '#764BA2']
+                : ['#E5E7EB', '#D1D5DB']
+            }
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={{
+              height: 58,
+              borderRadius: 30,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
             {isLoading ? (
-              <ActivityIndicator color={colors.surface} />
+              <>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={{
+                  fontSize: 19,
+                  fontWeight: '800',
+                  color: '#FFFFFF',
+                  marginLeft: 8,
+                }}>
+                  등록 중...
+                </Text>
+              </>
             ) : (
-              <LinearGradient
-                colors={
-                  confession.trim() && !isOverLimit
-                    ? [colors.gradientStart, colors.gradientEnd]
-                    : [colors.borderDark, colors.borderDark]
-                }
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-                style={styles.submitGradient}>
+              <>
+                <Text style={{
+                  fontSize: 19,
+                  fontWeight: '800',
+                  color: '#FFFFFF',
+                  letterSpacing: 0.5,
+                }}>
+                  고백하기
+                </Text>
+                <View style={{width: 8}} />
                 <Ionicons
                   name="paper-plane"
                   size={20}
-                  color={colors.surface}
-                  style={styles.submitIcon}
+                  color="#FFFFFF"
                 />
-                <Text style={styles.submitButtonText}>
-                  일기 쓰고 다른 하루 보기
-                </Text>
-              </LinearGradient>
+              </>
             )}
-          </TouchableOpacity>
-          <Text style={styles.disclaimer}>
-            🔒 모든 일기는 익명으로 안전하게 처리됩니다
-          </Text>
-        </View>
-      </KeyboardAvoidingView>
+          </LinearGradient>
+        </TouchableOpacity>
+        <Text style={styles.disclaimer}>
+          🔒 익명으로 안전하게 처리됩니다
+        </Text>
+      </View>
+      
+      {/* 폰트 선택 모달 */}
+      <FontSelector
+        visible={fontSelectorVisible}
+        onClose={() => setFontSelectorVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -278,15 +318,18 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     backgroundColor: colors.surface,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 2,
   },
   backButton: {
-    width: 48,
-    height: 48,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -296,21 +339,24 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 22,
-    backgroundColor: colors.backgroundAlt,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : colors.backgroundAlt,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.textPrimary,
+    letterSpacing: -0.5,
   },
   headerRight: {
-    minWidth: 48,
-    alignItems: 'flex-end',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : colors.backgroundAlt,
+    borderRadius: borderRadius.md,
   },
   fontLabel: {
-    fontSize: 11,
+    fontSize: 12,
     color: colors.textSecondary,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   keyboardView: {
     flex: 1,
@@ -319,45 +365,53 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: 200, // 버튼 공간 확보
   },
   section: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.xl,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    letterSpacing: -0.3,
   },
   inputContainer: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: typeof colors.neutral === 'object' ? colors.neutral[200] : colors.border,
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
   },
   textInput: {
-    minHeight: 200,
-    maxHeight: 300,
-    padding: spacing.lg,
+    minHeight: 320,
+    maxHeight: 500,
+    padding: spacing.xl,
     fontSize: 17,
     color: colors.textPrimary,
     lineHeight: 28,
     textAlignVertical: 'top',
+    letterSpacing: -0.3,
   },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     gap: spacing.sm,
   },
   progressBar: {
     flex: 1,
-    height: 4,
-    backgroundColor: colors.border,
+    height: 6,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : colors.border,
     borderRadius: borderRadius.full,
     overflow: 'hidden',
   },
@@ -366,47 +420,76 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   charCount: {
-    fontSize: 13,
+    fontSize: 14,
     color: colors.textSecondary,
-    fontWeight: '500',
-    minWidth: 60,
+    fontWeight: '600',
+    minWidth: 70,
     textAlign: 'right',
   },
   charCountError: {
     color: colors.error,
   },
   bottomContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: Platform.OS === 'ios' ? 40 : spacing.xl,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: typeof colors.neutral === 'object' ? colors.neutral[100] : colors.border,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: -4},
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   submitButton: {
-    borderRadius: borderRadius.md,
+    borderRadius: 30, // 완전히 둥글게!
     overflow: 'hidden',
+    height: 58,
+    shadowColor: '#667EEA',
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    elevation: 12,
+    transform: [{scale: 1}],
   },
   submitButtonDisabled: {
-    opacity: 1,
+    opacity: 0.5,
+    shadowOpacity: 0.1,
   },
   submitGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    height: 58,
+    paddingHorizontal: 24,
+    gap: 8, // 직접 숫자로 지정
+    borderRadius: 30,
   },
   submitIcon: {
-    marginRight: spacing.sm,
+    marginLeft: 0,
+    marginTop: 0,
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.surface,
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
+    lineHeight: 22, // 텍스트 수직 정렬을 위한 lineHeight
   },
   disclaimer: {
-    fontSize: 12,
-    color: colors.textTertiary,
+    fontSize: 13,
+    color: typeof colors.neutral === 'object' ? colors.neutral[500] : colors.textTertiary,
     textAlign: 'center',
-    marginTop: spacing.sm,
+    marginTop: spacing.lg,
+    opacity: 0.6,
+    fontWeight: '500',
   },
 });

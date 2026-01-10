@@ -65,7 +65,7 @@ const getStyles = (colors: any) =>
   StyleSheet.create({
     container: {
       backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF',
-      paddingTop: 50,
+      paddingTop: 16,
       paddingBottom: spacing.md,
       paddingHorizontal: spacing.xl, // ScreenLayout과 통일
     },

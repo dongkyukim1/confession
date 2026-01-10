@@ -79,7 +79,11 @@ export const LikeDislikeButtons = ({
               : colors.neutral[200],
             opacity: disabled ? 0.5 : 1,
           },
-        ]}>
+        ]}
+        accessibilityLabel={isLiked ? '좋아요 취소' : '좋아요'}
+        accessibilityHint={`현재 좋아요 ${likeCount}개`}
+        accessibilityRole="button"
+        accessibilityState={{disabled, selected: isLiked}}>
         <Text style={[styles.icon, isLiked && styles.activeIcon]}>
           {isLiked ? '👍' : '👍🏻'}
         </Text>
@@ -111,7 +115,11 @@ export const LikeDislikeButtons = ({
               : (typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5'),
             opacity: disabled ? 0.5 : 1,
           },
-        ]}>
+        ]}
+        accessibilityLabel={isDisliked ? '싫어요 취소' : '싫어요'}
+        accessibilityHint={`현재 싫어요 ${dislikeCount}개`}
+        accessibilityRole="button"
+        accessibilityState={{disabled, selected: isDisliked}}>
         <Text style={[styles.icon, isDisliked && styles.activeIcon]}>
           {isDisliked ? '👎' : '👎🏻'}
         </Text>
@@ -157,7 +165,7 @@ const styles = StyleSheet.create({
   },
   count: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.regular,  // 2026 디자인 시스템: Bold 최소화
   },
 });
 

@@ -22,6 +22,7 @@ import {useModal, showErrorModal} from '../contexts/ModalContext';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
+import {BackgroundRenderer} from '../components/BackgroundRenderer';
 
 export default function ViewedDiaryScreen() {
   const [viewedConfessions, setViewedConfessions] = useState<ViewedConfession[]>([]);
@@ -124,6 +125,7 @@ export default function ViewedDiaryScreen() {
     <ScreenLayout
       title="읽은 이야기"
       subtitle=""
+      backgroundComponent={<BackgroundRenderer />}
       icon="eye-outline"
       showHeader={true}
       showBorder={false}

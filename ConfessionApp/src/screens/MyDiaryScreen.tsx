@@ -30,6 +30,7 @@ import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 import {useAchievementChecker} from '../hooks/useAchievementChecker';
 import AchievementModal from '../components/AchievementModal';
+import {BackgroundRenderer} from '../components/BackgroundRenderer';
 
 export default function MyDiaryScreen() {
   const [confessions, setConfessions] = useState<Confession[]>([]);
@@ -185,6 +186,7 @@ export default function MyDiaryScreen() {
     <ScreenLayout
       title="모음"
       icon="book-outline"
+      backgroundComponent={<BackgroundRenderer />}
       showHeader={true}
       showBorder={false}
       isLoading={isLoading}

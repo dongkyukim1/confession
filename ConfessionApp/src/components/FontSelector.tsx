@@ -33,6 +33,12 @@ export default function FontSelector({visible, onClose}: FontSelectorProps) {
 
   const styles = getStyles(colors);
 
+  // 디버깅 로그
+  React.useEffect(() => {
+    console.log('📝 FontSelector 열림, 현재 폰트:', selectedFont);
+    console.log('📝 사용 가능한 폰트:', Object.keys(FONT_OPTIONS));
+  }, [visible]);
+
   // Group fonts by category
   const fontsByCategory = Object.values(FONT_OPTIONS).reduce(
     (acc, font) => {
@@ -60,7 +66,9 @@ export default function FontSelector({visible, onClose}: FontSelectorProps) {
   };
 
   const handleConfirm = async () => {
+    console.log('✅ 폰트 선택:', tempSelected);
     await setSelectedFont(tempSelected);
+    console.log('✅ 폰트 저장 완료');
     onClose();
   };
 

@@ -191,7 +191,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
       Animated.delay(800),
       Animated.timing(flipAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 600,  // 2026 디자인 시스템: 800ms → 600ms로 단축
         useNativeDriver: true,
       }),
     ]).start(() => {
@@ -381,7 +381,10 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         style={styles.closeButton}
         onPress={() => navigation.navigate('MainTabs')}
         activeOpacity={0.7}
-        hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+        hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
+        accessibilityLabel="닫기"
+        accessibilityHint="홈 화면으로 돌아갑니다"
+        accessibilityRole="button">
         <Ionicons name="close" size={20} color={neutral500} />
       </TouchableOpacity>
 

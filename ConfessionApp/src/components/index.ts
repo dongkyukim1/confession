@@ -39,3 +39,7 @@ export * from './ui';
 
 // Font 컴포넌트
 export {default as FontSelector} from './FontSelector';
+
+// 배경 컴포넌트
+export {BackgroundRenderer} from './BackgroundRenderer';
+export {default as AchievementModal} from './AchievementModal';

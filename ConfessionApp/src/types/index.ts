@@ -12,6 +12,7 @@ export type RootStackParamList = {
   Reveal: {confessionId: string};
   AnimationShowcase: undefined;
   IconShowcase: undefined;
+  BackgroundSettings: undefined;
 };
 
 export type BottomTabParamList = {

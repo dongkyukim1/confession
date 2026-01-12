@@ -14,7 +14,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Platform,
   Modal,
   Dimensions,
 } from 'react-native';
@@ -143,7 +142,7 @@ export default function ImagePickerComponent({
       }
 
       // Supabase Storage에 업로드
-      const {data, error} = await supabase.storage
+      const {error} = await supabase.storage
         .from('confession-images')
         .upload(filePath, bytes.buffer, {
           contentType: asset.type || 'image/jpeg',

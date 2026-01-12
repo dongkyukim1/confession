@@ -4,9 +4,7 @@
  * 체크마크가 회전하며 나타나고 배경이 확장되는 효과
  */
 import React, {useEffect, useRef} from 'react';
-import {View, Text, StyleSheet, Animated, Dimensions} from 'react-native';
-
-const {width} = Dimensions.get('window');
+import {View, Text, StyleSheet, Animated} from 'react-native';
 
 interface SuccessAnimationProps {
   onComplete?: () => void;

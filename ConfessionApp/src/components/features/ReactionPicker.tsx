@@ -3,8 +3,8 @@
  *
  * Emoji reaction selector for diary entries
  */
-import React, {useState} from 'react';
-import {View, Text, StyleSheet, Pressable, Animated} from 'react-native';
+import React, {useState, memo} from 'react';
+import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {REACTIONS} from '../../types/features';
 import {useTheme} from '../../contexts/ThemeContext';
 import {spacing, borderRadius, typography} from '../../theme';
@@ -16,7 +16,7 @@ interface ReactionPickerProps {
   userReaction?: string | null;
 }
 
-export const ReactionPicker = ({
+export const ReactionPicker = memo(({
   onReaction,
   currentReactions = {},
   userReaction,
@@ -160,7 +160,9 @@ export const ReactionPicker = ({
       )}
     </View>
   );
-};
+});
+
+ReactionPicker.displayName = 'ReactionPicker';
 
 const styles = StyleSheet.create({
   container: {

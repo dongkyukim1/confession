@@ -4,7 +4,7 @@
  * 화면 하단에 떠있는 메인 액션 버튼
  */
 import React from 'react';
-import {TouchableOpacity, StyleSheet, Animated} from 'react-native';
+import {TouchableOpacity, StyleSheet} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {shadows} from '../theme';

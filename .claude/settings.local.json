@@ -10,7 +10,18 @@
       "Bash(while read f)",
       "Bash(do grep -L \"import.*spacing\" \"$f\")",
       "Bash(done)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Skill(sc:brainstorm)",
+      "Skill(sc:brainstorm:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(npx tsc:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm run lint)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

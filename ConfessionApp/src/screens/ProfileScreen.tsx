@@ -27,7 +27,7 @@ import {useTheme} from '../contexts/ThemeContext';
 import {lightColors} from '../theme/colors';
 import {getDeviceId} from '../utils/deviceId';
 import {useStatistics} from '../hooks/useStatistics';
-import {ProfileHeaderSkeleton, StatCardSkeleton} from '../components/Skeleton';
+import {ProfileHeaderSkeleton} from '../components/Skeleton';
 import {BackgroundRenderer} from '../components/BackgroundRenderer';
 import {useBackground} from '../contexts/BackgroundContext';
 

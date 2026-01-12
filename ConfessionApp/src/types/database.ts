@@ -97,6 +97,69 @@ export type AchievementInsert = {
   viewed?: boolean;
 };
 
+// 스트릭 타입
+export interface UserStreak {
+  id: string;
+  device_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_confession_date: string;
+  updated_at: string;
+}
+
+export type UserStreakInsert = {
+  device_id: string;
+  current_streak?: number;
+  longest_streak?: number;
+  last_confession_date?: string;
+};
+
+export type UserStreakUpdate = {
+  current_streak?: number;
+  longest_streak?: number;
+  last_confession_date?: string;
+  updated_at?: string;
+};
+
+// 일일 미션 타입
+export type MissionType =
+  | 'write_confession'      // 고백 작성
+  | 'read_confessions'      // 고백 읽기
+  | 'give_reaction'         // 반응 남기기
+  | 'write_with_mood'       // 특정 기분으로 작성
+  | 'write_with_tag'        // 태그 사용하여 작성
+  | 'write_with_image'      // 이미지 첨부하여 작성
+  | 'write_long_confession'; // 긴 고백 작성
+
+export interface Mission {
+  id: string;
+  type: MissionType;
+  title: string;
+  description: string;
+  target_count: number;
+  reward_xp: number;
+  icon: string;
+}
+
+export interface UserDailyMission {
+  id: string;
+  device_id: string;
+  mission_id: string;
+  mission_date: string;
+  current_progress: number;
+  is_completed: boolean;
+  completed_at?: string | null;
+  created_at: string;
+}
+
+export type UserDailyMissionInsert = {
+  device_id: string;
+  mission_id: string;
+  mission_date: string;
+  current_progress?: number;
+  is_completed?: boolean;
+};
+
 export interface Database {
   public: {
     Tables: {
@@ -119,6 +182,21 @@ export interface Database {
         Row: Achievement;
         Insert: AchievementInsert;
         Update: Partial<AchievementInsert>;
+      };
+      user_streaks: {
+        Row: UserStreak;
+        Insert: UserStreakInsert;
+        Update: UserStreakUpdate;
+      };
+      missions: {
+        Row: Mission;
+        Insert: Omit<Mission, 'id'>;
+        Update: Partial<Omit<Mission, 'id'>>;
+      };
+      user_daily_missions: {
+        Row: UserDailyMission;
+        Insert: UserDailyMissionInsert;
+        Update: Partial<UserDailyMissionInsert>;
       };
     };
     Views: {

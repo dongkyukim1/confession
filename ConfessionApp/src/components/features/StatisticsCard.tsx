@@ -3,7 +3,7 @@
  *
  * Display user writing statistics and insights
  */
-import React from 'react';
+import React, {memo} from 'react';
 import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {Card} from '../ui/Card';
 import {UserStatistics} from '../../types/features';
@@ -14,7 +14,7 @@ interface StatisticsCardProps {
   statistics: UserStatistics;
 }
 
-export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
+export const StatisticsCard = memo(({statistics}: StatisticsCardProps) => {
   const theme = useTheme();
   // colors가 객체인지 확인하고 안전하게 처리
   const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
@@ -132,7 +132,9 @@ export const StatisticsCard = ({statistics}: StatisticsCardProps) => {
       )}
     </Card>
   );
-};
+});
+
+StatisticsCard.displayName = 'StatisticsCard';
 
 const styles = StyleSheet.create({
   title: {

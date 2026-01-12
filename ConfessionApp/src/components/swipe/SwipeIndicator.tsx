@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import {View, Text, StyleSheet, Animated} from 'react-native';
+import {Text, StyleSheet, Animated} from 'react-native';
 import {SwipeDirection, SWIPE_DIRECTIONS} from '../../utils/gestureConfig';
 import {spacing, typography, borderRadius} from '../../theme';
 

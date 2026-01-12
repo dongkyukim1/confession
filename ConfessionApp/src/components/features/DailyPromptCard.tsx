@@ -38,7 +38,6 @@ export const DailyPromptCard = ({onUsePrompt}: DailyPromptCardProps) => {
 
   useEffect(() => {
     // Get daily prompt (changes daily)
-    const today = new Date().toDateString();
     const dayOfYear = Math.floor(
       (new Date().getTime() - new Date(new Date().getFullYear(), 0, 0).getTime()) /
         86400000,

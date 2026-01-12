@@ -29,7 +29,7 @@ export const LoadingSpinner = ({
         useNativeDriver: true,
       }),
     ).start();
-  }, []);
+  }, [spinValue]);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],

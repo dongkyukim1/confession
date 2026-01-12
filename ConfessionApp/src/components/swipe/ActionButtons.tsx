@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import {View, StyleSheet, TouchableOpacity, Animated} from 'react-native';
+import {View, StyleSheet, TouchableOpacity} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {SwipeAction} from '../../utils/gestureConfig';
 import {triggerHaptic} from '../../utils/haptics';

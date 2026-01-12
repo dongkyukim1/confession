@@ -5,15 +5,20 @@
  */
 import React from 'react';
 import {View, ImageBackground, StyleSheet, Dimensions} from 'react-native';
-import {BlurView} from 'expo-blur';
 import {useBackground} from '../contexts/BackgroundContext';
 import {useTheme} from '../contexts/ThemeContext';
 
 const {width, height} = Dimensions.get('window');
 
 export const BackgroundRenderer = React.memo(() => {
+  // Hooks는 항상 최상위에서 호출
   const {currentSettings, currentPreset} = useBackground();
   const {colors} = useTheme();
+
+  // 로딩 중이거나 데이터가 없으면 기본 배경 표시
+  if (!currentSettings || !currentPreset || !colors) {
+    return <View style={[styles.background, styles.defaultBackground]} />;
+  }
 
   // 기본 배경 (순백)
   if (currentPreset.type === 'default') {
@@ -24,6 +29,8 @@ export const BackgroundRenderer = React.memo(() => {
 
   // 이미지 배경
   if (currentPreset.type === 'image' && currentPreset.imageSource) {
+    const overlayOpacity = currentSettings.overlayOpacity ?? 0;
+    
     return (
       <View style={styles.background}>
         <ImageBackground
@@ -36,22 +43,20 @@ export const BackgroundRenderer = React.memo(() => {
             <View
               style={[
                 styles.opacityLayer,
-                {
-                  backgroundColor: '#FFFFFF',
-                  opacity: 1 - currentSettings.opacity,
-                },
+                styles.whiteOverlay,
+                {opacity: 1 - currentSettings.opacity},
               ]}
             />
           )}
 
           {/* 오버레이 레이어 (틴트) */}
-          {currentSettings.overlayColor && currentSettings.overlayOpacity > 0 && (
+          {currentSettings.overlayColor && overlayOpacity > 0 && (
             <View
               style={[
                 styles.overlayLayer,
                 {
                   backgroundColor: currentSettings.overlayColor,
-                  opacity: currentSettings.overlayOpacity,
+                  opacity: overlayOpacity,
                 },
               ]}
             />
@@ -80,6 +85,9 @@ const styles = StyleSheet.create({
     height: height,
     zIndex: -1,
   },
+  defaultBackground: {
+    backgroundColor: '#FAFAFA',
+  },
   imageBackground: {
     flex: 1,
     width: '100%',
@@ -87,6 +95,9 @@ const styles = StyleSheet.create({
   },
   opacityLayer: {
     ...StyleSheet.absoluteFillObject,
+  },
+  whiteOverlay: {
+    backgroundColor: '#FFFFFF',
   },
   overlayLayer: {
     ...StyleSheet.absoluteFillObject,

@@ -4,7 +4,7 @@
  * PanResponder 기반 제스처 처리와 방향별 애니메이션
  */
 
-import React, {useRef, useCallback, useMemo} from 'react';
+import React, {useRef, useCallback} from 'react';
 import {
   View,
   StyleSheet,
@@ -19,8 +19,6 @@ import {
   SwipeResult,
   detectSwipeDirection,
   isSwipeComplete,
-  calculateOverlayOpacity,
-  calculateRotation,
   SWIPE_DIRECTIONS,
   GESTURE_CONFIG,
 } from '../../utils/gestureConfig';

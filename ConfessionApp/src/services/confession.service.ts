@@ -1,11 +1,13 @@
 /**
  * Confession Service
- * 
+ *
  * 고백 관련 비즈니스 로직을 처리합니다.
  */
 import {supabase} from '../lib/supabase';
 import {Confession, NewConfession} from '../types';
 import {handleApiError, withRetry, validateRequired} from './api.utils';
+import {StreakService} from './streak.service';
+import {MissionService} from './mission.service';
 
 export class ConfessionService {
   /**
@@ -44,6 +46,26 @@ export class ConfessionService {
       });
 
       console.log('[ConfessionService] Created confession:', result.id);
+
+      // 스트릭 업데이트
+      try {
+        await StreakService.updateStreakOnConfession(deviceId);
+      } catch (streakError) {
+        console.warn('[ConfessionService] Failed to update streak:', streakError);
+      }
+
+      // 미션 진행도 업데이트
+      try {
+        await MissionService.onConfessionCreated(deviceId, {
+          hasMood: !!data.mood,
+          hasTags: data.tags && data.tags.length > 0,
+          hasImages: data.images && data.images.length > 0,
+          contentLength: data.content.length,
+        });
+      } catch (missionError) {
+        console.warn('[ConfessionService] Failed to update missions:', missionError);
+      }
+
       return this.mapToConfession(result);
     } catch (error) {
       throw handleApiError(error);
@@ -58,18 +80,28 @@ export class ConfessionService {
       validateRequired(deviceId, '기기 ID');
 
       const result = await withRetry(async () => {
-        // 본인이 작성하지 않고, 아직 보지 않은 고백 조회
-        const {data: confessions, error} = await supabase
+        // 1단계: 이미 본 고백 ID 목록 조회 (파라미터화된 쿼리)
+        const {data: viewedData} = await supabase
+          .from('confession_views')
+          .select('confession_id')
+          .eq('viewer_device_id', deviceId);
+
+        const viewedIds = viewedData?.map(v => v.confession_id) || [];
+
+        // 2단계: 본인이 작성하지 않고, 아직 보지 않은 고백 조회
+        let query = supabase
           .from('confessions')
           .select('*')
           .neq('device_id', deviceId)
-          .not('id', 'in', `(
-            SELECT confession_id 
-            FROM confession_views 
-            WHERE viewer_device_id = '${deviceId}'
-          )`)
           .order('created_at', {ascending: false})
           .limit(10);
+
+        // 이미 본 고백 제외 (배열이 비어있지 않을 때만)
+        if (viewedIds.length > 0) {
+          query = query.not('id', 'in', `(${viewedIds.join(',')})`);
+        }
+
+        const {data: confessions, error} = await query;
 
         if (error) throw error;
         return confessions;
@@ -114,6 +146,13 @@ export class ConfessionService {
       });
 
       console.log('[ConfessionService] Marked as viewed:', confessionId);
+
+      // 미션 진행도 업데이트 (고백 읽기)
+      try {
+        await MissionService.onConfessionRead(viewerDeviceId);
+      } catch (missionError) {
+        console.warn('[ConfessionService] Failed to update read mission:', missionError);
+      }
     } catch (error) {
       // 이미 조회한 경우 무시 (중복 키 에러)
       if (error.code === '23505') {

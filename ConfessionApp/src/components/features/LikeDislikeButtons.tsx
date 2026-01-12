@@ -3,7 +3,7 @@
  * 
  * 다른 사람의 일기에 좋아요/싫어요 반응을 남길 수 있는 버튼
  */
-import React from 'react';
+import React, {memo} from 'react';
 import {View, Text, StyleSheet, Pressable} from 'react-native';
 import {LikeType} from '../../types/database';
 import {useTheme} from '../../contexts/ThemeContext';
@@ -19,7 +19,7 @@ interface LikeDislikeButtonsProps {
   disabled?: boolean;
 }
 
-export const LikeDislikeButtons = ({
+export const LikeDislikeButtons = memo(({
   likeCount,
   dislikeCount,
   userLikeType,
@@ -139,7 +139,9 @@ export const LikeDislikeButtons = ({
       </Pressable>
     </View>
   );
-};
+});
+
+LikeDislikeButtons.displayName = 'LikeDislikeButtons';
 
 const styles = StyleSheet.create({
   container: {

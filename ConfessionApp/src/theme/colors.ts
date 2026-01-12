@@ -889,3 +889,286 @@ export const colors = lightColors;
 
 export type ColorKey = keyof typeof colors;
 
+// ============================================
+// 프리미엄 디자인 시스템 (Premium Design System)
+// ============================================
+
+// 섀도우 시스템 (고급스러운 깊이감)
+export const shadows = {
+  // === 레거시 키 (하위 호환성) ===
+  small: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  medium: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  large: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  primary: {
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  none: {
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  // === 단축 키 (루트 레벨) ===
+  xs: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  xl: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  // === 모던 키 (라이트/다크 모드) ===
+  // 라이트 모드 섀도우
+  light: {
+    none: 'none',
+    xs: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.03,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.12,
+      shadowRadius: 16,
+      elevation: 8,
+    },
+    xl: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
+      elevation: 12,
+    },
+    '2xl': {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 16 },
+      shadowOpacity: 0.18,
+      shadowRadius: 32,
+      elevation: 16,
+    },
+    // 프리미엄 컬러 섀도우
+    glow: {
+      shadowColor: '#EC4899',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    soft: {
+      shadowColor: '#6366F1',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 20,
+      elevation: 10,
+    },
+  },
+  // 다크 모드 섀도우 (더 강한 깊이감)
+  dark: {
+    none: 'none',
+    xs: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    sm: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    md: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    lg: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.35,
+      shadowRadius: 16,
+      elevation: 8,
+    },
+    xl: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.4,
+      shadowRadius: 24,
+      elevation: 12,
+    },
+    '2xl': {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 16 },
+      shadowOpacity: 0.45,
+      shadowRadius: 32,
+      elevation: 16,
+    },
+    glow: {
+      shadowColor: '#F472B6',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    soft: {
+      shadowColor: '#7C7FF5',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.25,
+      shadowRadius: 20,
+      elevation: 10,
+    },
+  },
+} as const;
+
+// 프리미엄 그라디언트 시스템
+export const gradients = {
+  // 라이트 모드 그라디언트
+  light: {
+    primary: ['#6366F1', '#8B5CF6'],
+    secondary: ['#EC4899', '#F472B6'],
+    accent: ['#F97316', '#FBBF24'],
+    success: ['#10B981', '#34D399'],
+    premium: ['#6366F1', '#EC4899', '#F97316'],
+    glass: ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.7)'],
+    subtle: ['rgba(99,102,241,0.05)', 'rgba(139,92,246,0.05)'],
+    card: ['#FFFFFF', '#FAFAFA'],
+    shimmer: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0)'],
+  },
+  // 다크 모드 그라디언트
+  dark: {
+    primary: ['#7C7FF5', '#A78BFA'],
+    secondary: ['#F472B6', '#FB7185'],
+    accent: ['#FB923C', '#FBBF24'],
+    success: ['#34D399', '#6EE7B7'],
+    premium: ['#7C7FF5', '#F472B6', '#FB923C'],
+    glass: ['rgba(30,41,59,0.9)', 'rgba(30,41,59,0.7)'],
+    subtle: ['rgba(124,127,245,0.1)', 'rgba(167,139,250,0.1)'],
+    card: ['#1E293B', '#1A2332'],
+    shimmer: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0)'],
+  },
+} as const;
+
+// 글래스모피즘 스타일
+export const glassmorphism = {
+  light: {
+    background: 'rgba(255, 255, 255, 0.75)',
+    blur: 12,
+    border: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 1,
+  },
+  dark: {
+    background: 'rgba(30, 41, 59, 0.75)',
+    blur: 12,
+    border: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+  },
+  frosted: {
+    background: 'rgba(255, 255, 255, 0.65)',
+    blur: 20,
+    border: 'rgba(255, 255, 255, 0.25)',
+    borderWidth: 1,
+  },
+  subtle: {
+    background: 'rgba(255, 255, 255, 0.5)',
+    blur: 8,
+    border: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 0.5,
+  },
+} as const;
+
+// NOTE: borderRadius, spacing은 spacing.ts에서 관리
+// 여기서는 colors, shadows, gradients, glassmorphism, opacity만 관리
+
+// 프리미엄 투명도 시스템
+export const opacity = {
+  0: 0,
+  5: 0.05,
+  10: 0.1,
+  20: 0.2,
+  25: 0.25,
+  30: 0.3,
+  40: 0.4,
+  50: 0.5,
+  60: 0.6,
+  70: 0.7,
+  75: 0.75,
+  80: 0.8,
+  90: 0.9,
+  95: 0.95,
+  100: 1,
+} as const;
+
+export type ShadowKey = keyof typeof shadows.light;
+export type GradientKey = keyof typeof gradients.light;
+// NOTE: BorderRadiusKey, SpacingKey는 spacing.ts에서 export됨

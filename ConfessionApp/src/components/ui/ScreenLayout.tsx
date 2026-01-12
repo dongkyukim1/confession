@@ -84,7 +84,7 @@ export const ScreenLayout = ({
   );
 };
 
-const getStyles = (colors: typeof lightColors) =>
+const getStyles = (_colors: typeof lightColors) =>
   StyleSheet.create({
     container: {
       flex: 1,

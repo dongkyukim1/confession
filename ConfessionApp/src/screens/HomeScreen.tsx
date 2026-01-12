@@ -22,8 +22,10 @@ import {
   StatusBar,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
+import type {CompositeNavigationProp} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {RootStackParamList} from '../types';
+import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
+import {RootStackParamList, BottomTabParamList} from '../types';
 import {useTheme} from '../contexts/ThemeContext';
 import {lightColors} from '../theme/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -32,11 +34,20 @@ import {useMyConfessions} from '../hooks/useConfessions';
 import {useStatistics} from '../hooks/useStatistics';
 import {ConfessionCardSkeleton, StatCardSkeleton} from '../components/Skeleton';
 import {BackgroundRenderer} from '../components/BackgroundRenderer';
+import {StreakWidget} from '../components/features/StreakWidget';
+import {DailyMissionsCard} from '../components/features/DailyMissionsCard';
 
 const {width} = Dimensions.get('window');
 
+// HomeScreen에서 사용할 네비게이션 타입 정의
+// Tab 네비게이터와 Stack 네비게이터를 모두 사용할 수 있도록 Composite로 정의
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<BottomTabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
+
 function HomeScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<HomeScreenNavigationProp>();
   const {colors} = useTheme();
   const [deviceId, setDeviceId] = useState<string>('');
 
@@ -143,6 +154,12 @@ function HomeScreen() {
           </Text>
         </Animated.View>
 
+        {/* 스트릭 위젯 */}
+        <StreakWidget onPress={() => navigation.navigate('Write')} />
+
+        {/* 일일 미션 */}
+        <DailyMissionsCard />
+
         {/* 통계 카드 */}
         <Animated.View
           style={[
@@ -183,18 +200,18 @@ function HomeScreen() {
                 value={`${stats.currentStreak}일`}
                 color={colors.warning}
                 styles={styles}
-              />
-              <StatCard
-                icon="trophy-outline"
-                label="최장 연속"
-                value={`${stats.longestStreak}일`}
-                color={colors.success}
-                styles={styles}
-              />
-            </View>
-          ) : null}
-        </Animated.View>
-
+                />
+                <StatCard
+                  icon="trophy-outline"
+                  label="최장 연속"
+                  value={`${stats.longestStreak}일`}
+                  color={colors.success}
+                  styles={styles}
+                />
+              </View>
+            ) : null}
+          </Animated.View>
+  
         {/* 최근 고백 */}
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
@@ -215,12 +232,7 @@ function HomeScreen() {
               <ConfessionCardCompact
                 key={confession.id}
                 confession={confession}
-                onPress={() =>
-                  navigation.navigate('MyDiary', {
-                    screen: 'MyDiary',
-                    confessionId: confession.id,
-                  })
-                }
+                onPress={() => navigation.navigate('MyDiary')}
                 delay={index * 100}
                 styles={styles}
               />

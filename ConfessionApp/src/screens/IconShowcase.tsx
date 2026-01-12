@@ -4,14 +4,13 @@
  * 프로젝트의 모든 아이콘을 테스트하고 확인할 수 있는 화면
  */
 
-import React, {useState} from 'react';
+import React from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   Image,
-  TouchableOpacity,
 } from 'react-native';
 import {typography, spacing} from '../theme';
 import {useTheme} from '../contexts/ThemeContext';

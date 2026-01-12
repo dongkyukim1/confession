@@ -6,7 +6,7 @@
 import React from 'react';
 import {View, Text, StyleSheet, Image, ImageSourcePropType} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {typography, spacing, shadows, borderRadius} from '../theme';
+import {typography, spacing} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 

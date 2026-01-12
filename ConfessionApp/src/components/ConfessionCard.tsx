@@ -6,7 +6,7 @@
  * - 날짜/시간은 작고 뉴트럴 컬러
  * - viewCount는 작고 뉴트럴 컬러 (비교 유도하지 않음)
  */
-import React, {useState} from 'react';
+import React, {useState, memo} from 'react';
 import {
   View,
   Text,
@@ -36,7 +36,7 @@ interface ConfessionCardProps {
 
 const {width} = Dimensions.get('window');
 
-export default function ConfessionCard({
+const ConfessionCard = memo(({
   content,
   timestamp,
   viewCount,
@@ -45,7 +45,7 @@ export default function ConfessionCard({
   mood,
   images,
   tags,
-}: ConfessionCardProps) {
+}: ConfessionCardProps) => {
   const {colors} = useTheme();
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -224,7 +224,9 @@ export default function ConfessionCard({
   }
 
   return Content;
-}
+});
+
+ConfessionCard.displayName = 'ConfessionCard';
 
 const getStyles = (colors: typeof lightColors) => {
   const neutral0 = typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF';
@@ -392,3 +394,4 @@ const getStyles = (colors: typeof lightColors) => {
   });
 };
 
+export default ConfessionCard;

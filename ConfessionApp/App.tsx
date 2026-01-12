@@ -166,6 +166,8 @@ function MainTabs() {
  * 앱 내부 컴포넌트 (테마 적용)
  */
 function AppContent() {
+  console.log('🟦 AppContent 렌더링 시작');
+  
   const theme = useTheme();
   const colors = (theme && typeof theme.colors === 'object' && theme.colors) || {
     background: '#FAFBFC',
@@ -180,7 +182,9 @@ function AppContent() {
 
   useEffect(() => {
     console.log('✅ 앱 로드 완료:', fontOption.displayName);
-  }, [fontOption]);
+    console.log('✅ Theme:', theme.currentThemeName);
+    console.log('✅ Colors:', Object.keys(colors));
+  }, [fontOption, theme, colors]);
 
   const navigationTheme = isDark
     ? {

@@ -3,7 +3,7 @@
  *
  * Multi-select tag/category picker
  */
-import React from 'react';
+import React, {memo} from 'react';
 import {View, Text, StyleSheet, ScrollView, ViewStyle} from 'react-native';
 import {Tag} from '../ui/Tag';
 import {PREDEFINED_TAGS} from '../../types/features';
@@ -18,7 +18,7 @@ interface TagSelectorProps {
   style?: ViewStyle;
 }
 
-export const TagSelector = ({
+export const TagSelector = memo(({
   selectedTags,
   onTagsChange,
   label = '기분/카테고리',
@@ -73,7 +73,9 @@ export const TagSelector = ({
       </ScrollView>
     </View>
   );
-};
+});
+
+TagSelector.displayName = 'TagSelector';
 
 const styles = StyleSheet.create({
   container: {

@@ -8,23 +8,18 @@
  */
 import React, {useState, useEffect, useCallback} from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
   RefreshControl,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import {Confession} from '../types';
 import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import ConfessionCard from '../components/ConfessionCard';
 import {ScreenLayout} from '../components/ui/ScreenLayout';
-import {AnimatedLoading} from '../components/AnimatedLoading';
 import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useModal, showDestructiveModal, showErrorModal, showInfoModal} from '../contexts/ModalContext';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
@@ -38,8 +33,8 @@ export default function MyDiaryScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [allTags, setAllTags] = useState<string[]>([]);
+  const [, setSelectedTag] = useState<string | null>(null);
+  const [, setAllTags] = useState<string[]>([]);
   const {showModal} = useModal();
   const {colors} = useTheme();
   
@@ -95,9 +90,10 @@ export default function MyDiaryScreen() {
   };
 
   /**
-   * 태그 필터링
+   * 태그 필터링 (향후 사용 예정)
    */
-  const filterByTag = (tag: string | null) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _filterByTag = (tag: string | null) => {
     setSelectedTag(tag);
     if (!tag) {
       setFilteredConfessions(confessions);

@@ -11,15 +11,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  Dimensions,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useFont, FONT_OPTIONS, FontFamily, FontOption} from '../contexts/FontContext';
 import {useTheme} from '../contexts/ThemeContext';
 import {spacing, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
-
-const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
 interface FontSelectorProps {
   visible: boolean;
@@ -37,7 +34,7 @@ export default function FontSelector({visible, onClose}: FontSelectorProps) {
   React.useEffect(() => {
     console.log('📝 FontSelector 열림, 현재 폰트:', selectedFont);
     console.log('📝 사용 가능한 폰트:', Object.keys(FONT_OPTIONS));
-  }, [visible]);
+  }, [visible, selectedFont]);
 
   // Group fonts by category
   const fontsByCategory = Object.values(FONT_OPTIONS).reduce(

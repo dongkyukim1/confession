@@ -11,7 +11,6 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  ImageSourcePropType,
 } from 'react-native';
 import {spacing, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';

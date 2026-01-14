@@ -4,7 +4,7 @@
  * 고백 관련 비즈니스 로직을 처리합니다.
  */
 import {supabase} from '../lib/supabase';
-import {Confession, NewConfession} from '../types';
+import {Confession, NewConfession, ViewedConfession} from '../types';
 import {handleApiError, withRetry, validateRequired} from './api.utils';
 import {StreakService} from './streak.service';
 import {MissionService} from './mission.service';
@@ -195,23 +195,27 @@ export class ConfessionService {
 
   /**
    * 내가 본 고백 목록 조회
+   * viewed_confessions 테이블 사용 (통일된 테이블)
    */
   static async getViewedConfessions(
     deviceId: string,
     limit: number = 20,
     offset: number = 0,
-  ): Promise<Confession[]> {
+  ): Promise<ViewedConfession[]> {
     try {
       validateRequired(deviceId, '기기 ID');
 
       const result = await withRetry(async () => {
         const {data, error} = await supabase
-          .from('confession_views')
+          .from('viewed_confessions')
           .select(`
+            id,
+            device_id,
+            confession_id,
             viewed_at,
-            confessions (*)
+            confession:confessions(*)
           `)
-          .eq('viewer_device_id', deviceId)
+          .eq('device_id', deviceId)
           .order('viewed_at', {ascending: false})
           .range(offset, offset + limit - 1);
 
@@ -220,10 +224,8 @@ export class ConfessionService {
       });
 
       console.log('[ConfessionService] Got viewed confessions:', result.length);
-      
-      return result
-        .filter(item => item.confessions)
-        .map(item => this.mapToConfession(item.confessions as any));
+
+      return result as ViewedConfession[];
     } catch (error) {
       throw handleApiError(error);
     }

@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useTheme} from '../contexts/ThemeContext';
+import {useThemeColors} from '../hooks/useThemeColors';
 import {lightColors} from '../theme/colors';
 import {getDeviceId} from '../utils/deviceId';
 import {useStatistics} from '../hooks/useStatistics';
@@ -35,7 +35,7 @@ const {width} = Dimensions.get('window');
 
 function ProfileScreen() {
   const navigation = useNavigation();
-  const {colors} = useTheme();
+  const {colors, neutral} = useThemeColors();
   const {currentPreset} = useBackground();
   const [deviceId, setDeviceId] = useState<string>('');
   const [refreshing, setRefreshing] = useState(false);
@@ -52,15 +52,7 @@ function ProfileScreen() {
     setRefreshing(false);
   };
 
-  const neutral50 = typeof colors.neutral === 'object' ? colors.neutral[50] : '#FAFAFA';
-  const neutral100 = typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5';
-  const neutral200 = typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5';
-  const neutral300 = typeof colors.neutral === 'object' ? colors.neutral[300] : '#D4D4D4';
-  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9CA3AF';
-  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
-  const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
-
-  const styles = getStyles(colors, neutral50, neutral100, neutral200, neutral300, neutral400, neutral500, neutral700);
+  const styles = getStyles(colors, neutral[50], neutral[100], neutral[200], neutral[300], neutral[400], neutral[500], neutral[700]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -202,13 +194,13 @@ function ProfileScreen() {
               <Text style={styles.sectionTitle}>활동 인사이트</Text>
               <View style={styles.insightCard}>
                 <View style={styles.insightRow}>
-                  <Ionicons name="calendar-outline" size={20} color={neutral500} />
+                  <Ionicons name="calendar-outline" size={20} color={neutral[500]} />
                   <Text style={styles.insightText}>
                     주로 <Text style={styles.insightBold}>{stats?.favoriteWeekday ?? '데이터 없음'}</Text>에 고백해요
                   </Text>
                 </View>
                 <View style={styles.insightRow}>
-                  <Ionicons name="time-outline" size={20} color={neutral500} />
+                  <Ionicons name="time-outline" size={20} color={neutral[500]} />
                   <Text style={styles.insightText}>
                     <Text style={styles.insightBold}>{stats?.favoriteTime ?? '데이터 없음'}</Text> 시간대를 선호해요
                   </Text>
@@ -233,7 +225,7 @@ function ProfileScreen() {
                       <Text style={styles.settingValue}>{currentPreset.displayName}</Text>
                     </View>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={neutral400} />
+                  <Ionicons name="chevron-forward" size={20} color={neutral[400]} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -241,7 +233,7 @@ function ProfileScreen() {
         ) : !isLoading ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconContainer}>
-              <Ionicons name="bar-chart-outline" size={80} color={neutral300} />
+              <Ionicons name="bar-chart-outline" size={80} color={neutral[300]} />
             </View>
             <Text style={styles.emptyTitle}>아직 기록이 없어요</Text>
             <Text style={styles.emptySubtitle}>

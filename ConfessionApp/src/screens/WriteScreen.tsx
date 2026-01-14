@@ -28,7 +28,7 @@ import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../c
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {spacing, typography, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
-import {useTheme} from '../contexts/ThemeContext';
+import {useThemeColors} from '../hooks/useThemeColors';
 import MoodSelector from '../components/MoodSelector';
 import TagInput from '../components/TagInput';
 import ImagePickerComponent from '../components/ImagePicker';
@@ -38,6 +38,8 @@ import {checkStreakAchievement} from '../utils/achievementManager';
 import {Button} from '../components/ui/Button';
 import FontSelector from '../components/FontSelector';
 import {useFont} from '../contexts/FontContext';
+import {useDraft} from '../hooks/useDraft';
+import {DraftRecoveryModal} from '../components/features/DraftRecoveryModal';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -57,14 +59,16 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [fontSelectorVisible, setFontSelectorVisible] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
   const {showModal} = useModal();
-  const theme = useTheme();
-  // colors가 객체인지 확인하고 안전하게 처리
-  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
-  
+  const {colors, neutral, error: errorColors} = useThemeColors();
+
   // 폰트 시스템
   const {getFontFamily, fontOption} = useFont();
-  
+
+  // 임시저장 시스템
+  const {draft, hasDraft, clearDraft, startAutoSave, stopAutoSave} = useDraft();
+
   // 업적 시스템
   const {
     unlockAchievement,
@@ -76,6 +80,42 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   useEffect(() => {
     getOrCreateDeviceId().then(setDeviceId);
   }, []);
+
+  // 임시저장 확인 및 자동저장 시작
+  useEffect(() => {
+    if (hasDraft && confession.length === 0) {
+      setShowDraftModal(true);
+    }
+
+    // 자동저장 시작
+    startAutoSave(() => ({
+      content: confession,
+      mood: selectedMood,
+      tags: tags.length > 0 ? tags : undefined,
+      images: images.length > 0 ? images : undefined,
+    }));
+
+    return () => {
+      stopAutoSave();
+    };
+  }, [hasDraft]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 임시저장 복구
+  const handleRecoverDraft = () => {
+    if (draft) {
+      setConfession(draft.content);
+      if (draft.mood) setSelectedMood(draft.mood);
+      if (draft.tags) setTags(draft.tags);
+      if (draft.images) setImages(draft.images);
+    }
+    setShowDraftModal(false);
+  };
+
+  // 임시저장 삭제
+  const handleDiscardDraft = async () => {
+    await clearDraft();
+    setShowDraftModal(false);
+  };
 
   // Android 하드웨어 뒤로가기 버튼 처리
   useEffect(() => {
@@ -125,10 +165,13 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
 
       if (error) throw error;
 
+      // 성공 시 임시저장 삭제
+      await clearDraft();
+
       // 첫 글 작성 업적 체크
       if (deviceId) {
         await unlockAchievement(deviceId, 'first_post');
-        
+
         // 7일 연속 작성 업적 체크
         await checkStreakAchievement(deviceId);
       }
@@ -172,10 +215,6 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
 
   const styles = getStyles(colors);
 
-  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
-  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9A9A9A';
-  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
-  const error500 = typeof colors.error === 'object' ? colors.error[500] : '#EF4444';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -186,7 +225,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
           hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
-          <Ionicons name="close" size={24} color={neutral500} />
+          <Ionicons name="close" size={24} color={neutral[500]} />
         </TouchableOpacity>
         
         <Text style={styles.headerTitle}>일기 작성</Text>
@@ -221,7 +260,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
             <TextInput
               style={[styles.textInput, {fontFamily: getFontFamily()}]}
               placeholder="오늘 하루는 어땠나요?"
-              placeholderTextColor={neutral400}
+              placeholderTextColor={neutral[400]}
               multiline
               maxLength={MAX_CHARS + 50}
               value={confession}
@@ -234,7 +273,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
             <Text
               style={[
                 styles.charCount,
-                isOverLimit && {color: error500},
+                isOverLimit && {color: errorColors[500]},
               ]}>
               {confession.length}/{MAX_CHARS}
             </Text>
@@ -275,16 +314,14 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
         {/* 하단 제출 버튼 - 뉴트럴 스타일 */}
         <View style={styles.bottomContainer}>
           <Button
+            title="완료"
             variant="primary"
             size="lg"
             onPress={handleSubmit}
             disabled={!confession.trim() || isLoading || isOverLimit}
             loading={isLoading}
             fullWidth
-            accessibilityLabel="일기 작성 완료"
-            accessibilityHint="일기를 저장하고 다른 사람의 일기를 볼 수 있습니다">
-            완료
-          </Button>
+          />
         </View>
       </KeyboardAvoidingView>
       
@@ -302,6 +339,17 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
         visible={fontSelectorVisible}
         onClose={() => setFontSelectorVisible(false)}
       />
+
+      {/* 임시저장 복구 모달 */}
+      {draft && (
+        <DraftRecoveryModal
+          visible={showDraftModal}
+          draft={draft}
+          onRecover={handleRecoverDraft}
+          onDiscard={handleDiscardDraft}
+          onClose={() => setShowDraftModal(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

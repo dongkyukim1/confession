@@ -3,6 +3,11 @@
  *
  * 일기에 사진을 첨부하는 기능
  * react-native-image-picker로 이미지 선택 후 Supabase Storage에 업로드
+ *
+ * 검증 규칙:
+ * - 최대 파일 크기: 5MB
+ * - 허용 타입: JPEG, PNG, WebP, HEIC
+ * - 최대 크기: 2048x2048
  */
 import React, {useState} from 'react';
 import {
@@ -24,6 +29,26 @@ import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
 import {supabase} from '../lib/supabase';
 
+// 이미지 검증 상수
+const IMAGE_CONSTRAINTS = {
+  maxSize: 5 * 1024 * 1024, // 5MB
+  allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+  maxDimensions: {width: 2048, height: 2048},
+};
+
+// 이미지 검증 결과 타입
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+// 파일 크기 포맷팅
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 type ImagePickerProps = {
   images: string[];
   onImagesChange: (images: string[]) => void;
@@ -37,7 +62,45 @@ export default function ImagePickerComponent({
 }: ImagePickerProps) {
   const {colors} = useTheme();
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingCount, setUploadingCount] = useState({current: 0, total: 0});
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  /**
+   * 이미지 검증
+   */
+  const validateImage = (asset: Asset): ValidationResult => {
+    // 파일 크기 검증
+    if (asset.fileSize && asset.fileSize > IMAGE_CONSTRAINTS.maxSize) {
+      return {
+        valid: false,
+        error: `파일 크기가 너무 큽니다 (${formatFileSize(asset.fileSize)}). 최대 ${formatFileSize(IMAGE_CONSTRAINTS.maxSize)}까지 가능합니다.`,
+      };
+    }
+
+    // 파일 타입 검증
+    if (asset.type && !IMAGE_CONSTRAINTS.allowedTypes.includes(asset.type)) {
+      return {
+        valid: false,
+        error: `지원하지 않는 이미지 형식입니다. JPEG, PNG, WebP, HEIC 형식만 가능합니다.`,
+      };
+    }
+
+    // 이미지 크기 검증
+    if (asset.width && asset.height) {
+      if (
+        asset.width > IMAGE_CONSTRAINTS.maxDimensions.width ||
+        asset.height > IMAGE_CONSTRAINTS.maxDimensions.height
+      ) {
+        return {
+          valid: false,
+          error: `이미지 크기가 너무 큽니다. 최대 ${IMAGE_CONSTRAINTS.maxDimensions.width}x${IMAGE_CONSTRAINTS.maxDimensions.height}px까지 가능합니다.`,
+        };
+      }
+    }
+
+    return {valid: true};
+  };
 
   /**
    * 이미지 선택 및 Supabase Storage 업로드
@@ -65,21 +128,53 @@ export default function ImagePickerComponent({
       }
 
       if (result.assets && result.assets.length > 0) {
-        setUploading(true);
-        const uploadedUrls: string[] = [];
+        // 검증 먼저 수행
+        const validAssets: Asset[] = [];
+        const errors: string[] = [];
 
         for (const asset of result.assets) {
-          const url = await uploadImageToSupabase(asset);
-          if (url) {
-            uploadedUrls.push(url);
+          const validation = validateImage(asset);
+          if (validation.valid) {
+            validAssets.push(asset);
+          } else if (validation.error) {
+            errors.push(validation.error);
           }
         }
 
-        if (uploadedUrls.length > 0) {
-          onImagesChange([...images, ...uploadedUrls]);
+        // 검증 실패한 이미지가 있으면 알림
+        if (errors.length > 0) {
+          Alert.alert(
+            '일부 이미지를 업로드할 수 없습니다',
+            errors.join('\n\n'),
+          );
         }
 
-        setUploading(false);
+        // 검증 통과한 이미지만 업로드
+        if (validAssets.length > 0) {
+          setUploading(true);
+          setUploadingCount({current: 0, total: validAssets.length});
+          setUploadProgress(0);
+
+          const uploadedUrls: string[] = [];
+
+          for (let i = 0; i < validAssets.length; i++) {
+            setUploadingCount({current: i + 1, total: validAssets.length});
+            setUploadProgress(((i + 1) / validAssets.length) * 100);
+
+            const url = await uploadImageToSupabase(validAssets[i]);
+            if (url) {
+              uploadedUrls.push(url);
+            }
+          }
+
+          if (uploadedUrls.length > 0) {
+            onImagesChange([...images, ...uploadedUrls]);
+          }
+
+          setUploading(false);
+          setUploadProgress(0);
+          setUploadingCount({current: 0, total: 0});
+        }
       }
     } catch (error) {
       console.error('이미지 선택 오류:', error);
@@ -205,7 +300,21 @@ export default function ImagePickerComponent({
         {uploading && (
           <View style={styles.uploadingContainer}>
             <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.uploadingText}>업로드 중...</Text>
+            <Text style={styles.uploadingText}>
+              {uploadingCount.total > 1
+                ? `${uploadingCount.current}/${uploadingCount.total} 업로드 중`
+                : '업로드 중...'}
+            </Text>
+            {uploadingCount.total > 1 && (
+              <View style={styles.progressBarContainer}>
+                <View
+                  style={[
+                    styles.progressBar,
+                    {width: `${uploadProgress}%`, backgroundColor: colors.primary},
+                  ]}
+                />
+              </View>
+            )}
           </View>
         )}
 
@@ -329,6 +438,19 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
     fontSize: 11,
     color: colors.textSecondary,
     marginTop: 4,
+    textAlign: 'center',
+  },
+  progressBarContainer: {
+    width: 80,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    marginTop: spacing.xs,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 2,
   },
   imageContainer: {
     position: 'relative',

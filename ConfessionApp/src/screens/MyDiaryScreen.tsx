@@ -8,10 +8,13 @@
  */
 import React, {useState, useEffect, useCallback} from 'react';
 import {
+  View,
+  Text,
   StyleSheet,
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import {Confession} from '../types';
 import {supabase} from '../lib/supabase';
@@ -22,7 +25,7 @@ import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
 import {useModal, showDestructiveModal, showErrorModal, showInfoModal} from '../contexts/ModalContext';
 import {typography, spacing, shadows, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
-import {useTheme} from '../contexts/ThemeContext';
+import {useThemeColors} from '../hooks/useThemeColors';
 import {useAchievementChecker} from '../hooks/useAchievementChecker';
 import AchievementModal from '../components/AchievementModal';
 import {BackgroundRenderer} from '../components/BackgroundRenderer';
@@ -33,10 +36,10 @@ export default function MyDiaryScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [, setSelectedTag] = useState<string | null>(null);
-  const [, setAllTags] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const {showModal} = useModal();
-  const {colors} = useTheme();
+  const {colors, neutral} = useThemeColors();
   
   // 업적 시스템
   const {
@@ -90,10 +93,9 @@ export default function MyDiaryScreen() {
   };
 
   /**
-   * 태그 필터링 (향후 사용 예정)
+   * 태그 필터링
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _filterByTag = (tag: string | null) => {
+  const filterByTag = (tag: string | null) => {
     setSelectedTag(tag);
     if (!tag) {
       setFilteredConfessions(confessions);
@@ -103,6 +105,56 @@ export default function MyDiaryScreen() {
       );
       setFilteredConfessions(filtered);
     }
+  };
+
+  /**
+   * 태그 필터 UI 렌더링
+   */
+  const renderTagFilter = () => {
+    if (allTags.length === 0) return null;
+
+    return (
+      <View style={styles.tagFilterContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tagFilterContent}>
+          <TouchableOpacity
+            style={[
+              styles.tagFilterButton,
+              !selectedTag && styles.tagFilterButtonActive,
+            ]}
+            onPress={() => filterByTag(null)}
+            activeOpacity={0.7}>
+            <Text
+              style={[
+                styles.tagFilterText,
+                !selectedTag && styles.tagFilterTextActive,
+              ]}>
+              전체
+            </Text>
+          </TouchableOpacity>
+          {allTags.map(tag => (
+            <TouchableOpacity
+              key={tag}
+              style={[
+                styles.tagFilterButton,
+                selectedTag === tag && styles.tagFilterButtonActive,
+              ]}
+              onPress={() => filterByTag(tag)}
+              activeOpacity={0.7}>
+              <Text
+                style={[
+                  styles.tagFilterText,
+                  selectedTag === tag && styles.tagFilterTextActive,
+                ]}>
+                #{tag}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+    );
   };
 
   /**
@@ -175,8 +227,6 @@ export default function MyDiaryScreen() {
 
   const styles = getStyles(colors);
 
-  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
-  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
 
   return (
     <ScreenLayout
@@ -188,6 +238,9 @@ export default function MyDiaryScreen() {
       isLoading={isLoading}
       loadingMessage="일기를 불러오는 중..."
       contentStyle={styles.listContainer}>
+      {/* 태그 필터 */}
+      {renderTagFilter()}
+
       {/* 목록 - 무한 스크롤 최소화 */}
       <FlatList
         data={filteredConfessions}
@@ -199,8 +252,8 @@ export default function MyDiaryScreen() {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={neutral500}
-            colors={[neutral500]}
+            tintColor={neutral[500]}
+            colors={[neutral[500]]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -225,15 +278,14 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   listContainer: {
     paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
   },
-  tagFilter: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    backgroundColor: colors.surface,
+  tagFilterContainer: {
+    marginBottom: spacing.sm,
   },
   tagFilterContent: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.sm,
     gap: spacing.sm,
+    flexDirection: 'row',
   },
   tagFilterButton: {
     paddingVertical: spacing.sm,

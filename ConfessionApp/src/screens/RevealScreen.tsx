@@ -29,7 +29,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, shadows, borderRadius} from '../theme';
 import {spacing} from '../theme/spacing';
 import {lightColors} from '../theme/colors';
-import {useTheme} from '../contexts/ThemeContext';
+import {useThemeColors} from '../hooks/useThemeColors';
 import {LikeDislikeButtons} from '../components/features/LikeDislikeButtons';
 import ReportModal from '../components/features/ReportModal';
 import {AnimatedLoading} from '../components/AnimatedLoading';
@@ -48,9 +48,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   const [confession, setConfession] = useState<Confession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRevealed, setIsRevealed] = useState(false);
-  const theme = useTheme();
-  // colors가 객체인지 확인하고 안전하게 처리
-  const colors = (theme && typeof theme.colors === 'object' && theme.colors) || lightColors;
+  const {colors, neutral} = useThemeColors();
   
   // 좋아요/싫어요 상태
   const [likeCount, setLikeCount] = useState(0);
@@ -368,9 +366,6 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
     );
   }
 
-  // 2026 디자인 시스템: 뉴트럴 컬러 안전하게 접근
-  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9A9A9A';
-  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -385,7 +380,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         accessibilityLabel="닫기"
         accessibilityHint="홈 화면으로 돌아갑니다"
         accessibilityRole="button">
-        <Ionicons name="close" size={20} color={neutral500} />
+        <Ionicons name="close" size={20} color={neutral[500]} />
       </TouchableOpacity>
 
       {/* 2026 디자인 시스템: 헤더 제거 */}
@@ -485,7 +480,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
               <Ionicons
                 name="flag-outline"
                 size={16}
-                color={neutral400}
+                color={neutral[400]}
               />
             </TouchableOpacity>
           </View>

@@ -7,6 +7,7 @@ export {default as RevealScreen} from './RevealScreen';
 export {default as MyDiaryScreen} from './MyDiaryScreen';
 export {default as ViewedDiaryScreen} from './ViewedDiaryScreen';
 export {default as ProfileScreen} from './ProfileScreen';
+export {default as DiscoverScreen} from './DiscoverScreen';
 
 // 개발/쇼케이스 화면
 export {AnimationShowcase} from './AnimationShowcase';

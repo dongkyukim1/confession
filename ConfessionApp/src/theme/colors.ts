@@ -891,9 +891,7 @@ export type ColorKey = keyof typeof colors;
 
 // ============================================
 // 프리미엄 디자인 시스템 (Premium Design System)
-// ============================================
-
-// 섀도우 시스템 (고급스러운 깊이감)
+// ============================================// 섀도우 시스템 (고급스러운 깊이감)
 export const shadows = {
   // === 레거시 키 (하위 호환성) ===
   small: {
@@ -1167,8 +1165,6 @@ export const opacity = {
   90: 0.9,
   95: 0.95,
   100: 1,
-} as const;
-
-export type ShadowKey = keyof typeof shadows.light;
+} as const;export type ShadowKey = keyof typeof shadows.light;
 export type GradientKey = keyof typeof gradients.light;
 // NOTE: BorderRadiusKey, SpacingKey는 spacing.ts에서 export됨

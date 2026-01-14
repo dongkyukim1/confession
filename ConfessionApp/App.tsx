@@ -19,6 +19,7 @@ import {
   MyDiaryScreen,
   ViewedDiaryScreen,
   ProfileScreen,
+  DiscoverScreen,
   AnimationShowcase,
   IconShowcase,
   BackgroundSettingsScreen,
@@ -68,6 +69,8 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Discover') {
+            iconName = focused ? 'compass' : 'compass-outline';
           } else if (route.name === 'MyDiary') {
             iconName = focused ? 'book' : 'book-outline';
           } else if (route.name === 'ViewedDiary') {
@@ -131,6 +134,14 @@ function MainTabs() {
         options={{
           tabBarLabel: '홈',
           tabBarAccessibilityLabel: '홈 탭',
+        }}
+      />
+      <Tab.Screen
+        name="Discover"
+        component={DiscoverScreen}
+        options={{
+          tabBarLabel: '발견',
+          tabBarAccessibilityLabel: '발견 탭',
         }}
       />
       <Tab.Screen

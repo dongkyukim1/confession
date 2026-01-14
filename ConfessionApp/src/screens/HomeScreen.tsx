@@ -26,7 +26,7 @@ import type {CompositeNavigationProp} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import {RootStackParamList, BottomTabParamList} from '../types';
-import {useTheme} from '../contexts/ThemeContext';
+import {useThemeColors} from '../hooks/useThemeColors';
 import {lightColors} from '../theme/colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {getDeviceId} from '../utils/deviceId';
@@ -48,7 +48,7 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
 
 function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const {colors} = useTheme();
+  const {colors, neutral} = useThemeColors();
   const [deviceId, setDeviceId] = useState<string>('');
 
   // 애니메이션 값
@@ -120,14 +120,7 @@ function HomeScreen() {
     setRefreshing(false);
   };
 
-  const neutral50 = typeof colors.neutral === 'object' ? colors.neutral[50] : '#FAFAFA';
-  const neutral100 = typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5';
-  const neutral200 = typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5';
-  const neutral400 = typeof colors.neutral === 'object' ? colors.neutral[400] : '#9CA3AF';
-  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
-  const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
-
-  const styles = getStyles(colors, neutral50, neutral100, neutral200, neutral400, neutral500, neutral700);
+  const styles = getStyles(colors, neutral[50], neutral[100], neutral[200], neutral[400], neutral[500], neutral[700]);
 
   return (
     <SafeAreaView style={styles.container}>

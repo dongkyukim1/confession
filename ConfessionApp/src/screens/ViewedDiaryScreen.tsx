@@ -1,86 +1,52 @@
 /**
  * 본 일기장 화면
- * 
+ *
  * 내가 조회한 고백 목록을 표시합니다.
+ * React Query를 통한 서버 상태 관리
  */
-import React, {useState, useEffect, useCallback} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
   RefreshControl,
 } from 'react-native';
 import {ViewedConfession} from '../types';
-import {supabase} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
+import {useViewedConfessions} from '../hooks/useConfessions';
 import ConfessionCard from '../components/ConfessionCard';
 import {ScreenLayout} from '../components/ui/ScreenLayout';
-import {AnimatedLoading} from '../components/AnimatedLoading';
 import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
-import {useModal, showErrorModal} from '../contexts/ModalContext';
-import {typography, spacing, shadows, borderRadius} from '../theme';
+import {spacing} from '../theme';
 import {lightColors} from '../theme/colors';
-import {useTheme} from '../contexts/ThemeContext';
+import {useThemeColors} from '../hooks/useThemeColors';
 import {BackgroundRenderer} from '../components/BackgroundRenderer';
 
 export default function ViewedDiaryScreen() {
-  const [viewedConfessions, setViewedConfessions] = useState<ViewedConfession[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
-  const {showModal} = useModal();
-  const {colors} = useTheme();
+  const {colors, neutral} = useThemeColors();
+
+  // React Query 훅 사용
+  const {
+    data: viewedConfessions = [],
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useViewedConfessions(deviceId || '', 50);
 
   useEffect(() => {
     const init = async () => {
       const id = await getOrCreateDeviceId();
       setDeviceId(id);
-      if (id) {
-        await fetchViewedConfessions(id);
-      }
-      setIsLoading(false);
     };
     init();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  /**
-   * 조회한 고백 목록 가져오기
-   */
-  const fetchViewedConfessions = useCallback(async (id: string) => {
-    try {
-      // viewed_confessions 테이블과 confessions 테이블 조인
-      const {data, error} = await supabase
-        .from('viewed_confessions')
-        .select(`
-          id,
-          device_id,
-          confession_id,
-          viewed_at,
-          confession:confessions(*)
-        `)
-        .eq('device_id', id)
-        .order('viewed_at', {ascending: false});
-
-      if (error) throw error;
-
-      setViewedConfessions(data || []);
-    } catch (error) {
-      console.error('조회 목록 가져오기 오류:', error);
-      showErrorModal(showModal, '오류', '조회 목록을 불러오는데 실패했습니다.');
-    }
-  }, [showModal]);
 
   /**
    * Pull to refresh
    */
-  const onRefresh = useCallback(async () => {
-    if (!deviceId) return;
-    setIsRefreshing(true);
-    await fetchViewedConfessions(deviceId);
-    setIsRefreshing(false);
-  }, [deviceId, fetchViewedConfessions]);
+  const onRefresh = () => {
+    refetch();
+  };
 
   /**
    * 빈 화면 렌더링
@@ -119,7 +85,6 @@ export default function ViewedDiaryScreen() {
   };
 
   const styles = getStyles(colors);
-  const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
 
   return (
     <ScreenLayout
@@ -141,10 +106,10 @@ export default function ViewedDiaryScreen() {
         ListEmptyComponent={renderEmpty}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
+            refreshing={isRefetching}
             onRefresh={onRefresh}
-            tintColor={neutral500}
-            colors={[neutral500]}
+            tintColor={neutral[500]}
+            colors={[neutral[500]]}
           />
         }
         showsVerticalScrollIndicator={false}
@@ -156,7 +121,7 @@ export default function ViewedDiaryScreen() {
   );
 }
 
-const getStyles = (colors: typeof lightColors) => StyleSheet.create({
+const getStyles = (_colors: typeof lightColors) => StyleSheet.create({
   listContainer: {
     paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
   },

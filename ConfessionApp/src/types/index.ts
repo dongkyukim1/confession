@@ -17,6 +17,7 @@ export type RootStackParamList = {
 
 export type BottomTabParamList = {
   Home: undefined;
+  Discover: undefined;
   MyDiary: undefined;
   ViewedDiary: undefined;
   Profile: undefined;

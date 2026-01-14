@@ -256,10 +256,10 @@ export const Button = memo(({
       borderRadius: rounded ? borderRadius.full : currentSize.borderRadius,
     },
     variantStyle.container,
-    fullWidth && styles.fullWidth,
-    disabled && styles.disabled,
-    style,
-  ];
+    ...(fullWidth ? [styles.fullWidth] : []),
+    ...(disabled ? [styles.disabled] : []),
+    ...(style ? [style] : []),
+  ].filter(Boolean);
 
   const textStyles: TextStyle[] = [
     styles.text,
@@ -268,8 +268,8 @@ export const Button = memo(({
       letterSpacing: typography.styles.button.letterSpacing,
     },
     variantStyle.text,
-    textStyle,
-  ];
+    ...(textStyle ? [textStyle] : []),
+  ].filter(Boolean);
 
   const iconColor = disabled ? (colors?.textDisabled || '#D4D4D4') : variantStyle.iconColor;
 

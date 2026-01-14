@@ -97,6 +97,15 @@ export type AchievementInsert = {
   viewed?: boolean;
 };
 
+// 조회한 고백 타입
+export interface ViewedConfession {
+  id: string;
+  device_id: string;
+  confession_id: string;
+  viewed_at: string;
+  confession: Confession | Confession[];
+}
+
 // 스트릭 타입
 export interface UserStreak {
   id: string;
@@ -158,6 +167,30 @@ export type UserDailyMissionInsert = {
   mission_date: string;
   current_progress?: number;
   is_completed?: boolean;
+};
+
+// 댓글 타입
+export interface Comment {
+  id: string;
+  confession_id: string;
+  device_id: string;
+  content: string;
+  parent_id?: string | null;
+  created_at: string;
+  like_count?: number;
+  // 조인 데이터
+  replies?: Comment[];
+}
+
+export type CommentInsert = {
+  confession_id: string;
+  device_id: string;
+  content: string;
+  parent_id?: string | null;
+};
+
+export type CommentUpdate = {
+  content?: string;
 };
 
 export interface Database {

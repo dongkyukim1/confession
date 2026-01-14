@@ -21,7 +21,8 @@
       "Bash(npm ls:*)",
       "Bash(npm audit:*)",
       "Bash(npm run lint)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(npm run lint:*)"
     ]
   }
 }

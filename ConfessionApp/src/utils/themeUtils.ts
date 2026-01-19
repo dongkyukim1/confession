@@ -151,3 +151,4 @@ export function getNeutralColor(colors: ColorScheme | any, shade: keyof ColorSch
   
   return colors.neutral[shade] || '#737373';
 }
+

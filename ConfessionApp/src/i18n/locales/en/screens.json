@@ -1,0 +1,90 @@
+{
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome",
+    "todayConfession": "Today's Confession",
+    "writePrompt": "Share what's on your mind",
+    "randomConfession": "View Random Confession",
+    "noConfessions": "No confessions to display",
+    "writeButton": "Write a Confession"
+  },
+  "discover": {
+    "title": "Discover",
+    "subtitle": "Others' Stories",
+    "trending": "Trending",
+    "recent": "Recent",
+    "swipeHint": "Swipe left or right to explore",
+    "empty": "No confessions to explore"
+  },
+  "myDiary": {
+    "title": "My Diary",
+    "subtitle": "My confessions",
+    "count": "{{count}} confessions total",
+    "empty": "You haven't written any confessions yet",
+    "emptyHint": "Write your first confession!",
+    "deleteConfirm": "Are you sure you want to delete this confession?",
+    "deleteSuccess": "Confession deleted"
+  },
+  "viewedDiary": {
+    "title": "Read",
+    "subtitle": "Confessions I've read",
+    "count": "Read {{count}} confessions",
+    "empty": "You haven't read any confessions yet",
+    "emptyHint": "Explore confessions from the home screen!"
+  },
+  "profile": {
+    "title": "Profile",
+    "statistics": "Statistics",
+    "settings": "Settings",
+    "achievements": "Achievements",
+    "streak": "Writing Streak",
+    "theme": "Theme",
+    "font": "Font",
+    "background": "Background",
+    "language": "Language",
+    "notifications": "Notifications",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "version": "Version {{version}}",
+    "logout": "Logout"
+  },
+  "write": {
+    "title": "Write Confession",
+    "placeholder": "Write freely what's on your mind...",
+    "moodSelect": "How are you feeling?",
+    "tagAdd": "Add Tag",
+    "tagHint": "Type a tag and press enter",
+    "imageAdd": "Add Image",
+    "submit": "Confess",
+    "cancel": "Cancel",
+    "success": "Confession posted!",
+    "charCount": "{{current}}/{{max}}"
+  },
+  "reveal": {
+    "title": "Confession",
+    "loading": "Loading confession...",
+    "error": "Failed to load confession",
+    "reactions": "Reactions",
+    "comments": "Comments",
+    "share": "Share",
+    "report": "Report"
+  },
+  "onboarding": {
+    "welcome": "Welcome!",
+    "intro": "Please agree to the terms below before using the Confession app.",
+    "agreeAll": "Agree to All",
+    "age": "I am 14 years old or older",
+    "ageDesc": "This service is only available for users 14 years or older.",
+    "terms": "Terms of Service",
+    "termsDesc": "I agree to the terms of service.",
+    "privacy": "Privacy Policy",
+    "privacyDesc": "I agree to the privacy policy.",
+    "marketing": "Marketing Communications (Optional)",
+    "marketingDesc": "Receive event and update notifications.",
+    "view": "View",
+    "required": "[Required]",
+    "optional": "[Optional]",
+    "notice": "You can use the service without agreeing to optional items.",
+    "start": "Get Started"
+  }
+}

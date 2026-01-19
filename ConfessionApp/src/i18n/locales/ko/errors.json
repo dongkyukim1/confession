@@ -1,0 +1,42 @@
+{
+  "network": {
+    "offline": "인터넷 연결이 끊어졌습니다",
+    "timeout": "요청 시간이 초과되었습니다",
+    "serverError": "서버 오류가 발생했습니다",
+    "unknown": "알 수 없는 오류가 발생했습니다"
+  },
+  "validation": {
+    "content": {
+      "required": "내용을 입력해주세요",
+      "minLength": "고백은 최소 10자 이상이어야 합니다",
+      "maxLength": "고백은 500자를 초과할 수 없습니다"
+    },
+    "tags": {
+      "maxCount": "태그는 최대 5개까지 가능합니다",
+      "maxLength": "태그는 20자를 초과할 수 없습니다",
+      "invalid": "태그에는 특수문자를 사용할 수 없습니다"
+    },
+    "images": {
+      "maxCount": "이미지는 최대 3개까지 가능합니다",
+      "invalid": "유효한 이미지 URL이 아닙니다"
+    },
+    "comment": {
+      "required": "댓글을 입력해주세요",
+      "maxLength": "댓글은 200자를 초과할 수 없습니다"
+    }
+  },
+  "auth": {
+    "deviceNotFound": "기기 정보를 찾을 수 없습니다",
+    "sessionExpired": "세션이 만료되었습니다"
+  },
+  "confession": {
+    "notFound": "고백을 찾을 수 없습니다",
+    "deleteFailed": "고백 삭제에 실패했습니다",
+    "createFailed": "고백 작성에 실패했습니다",
+    "loadFailed": "고백을 불러올 수 없습니다"
+  },
+  "report": {
+    "failed": "신고에 실패했습니다",
+    "alreadyReported": "이미 신고한 고백입니다"
+  }
+}

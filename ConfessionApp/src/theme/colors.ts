@@ -1146,9 +1146,7 @@ export const glassmorphism = {
 } as const;
 
 // NOTE: borderRadius, spacing은 spacing.ts에서 관리
-// 여기서는 colors, shadows, gradients, glassmorphism, opacity만 관리
-
-// 프리미엄 투명도 시스템
+// 여기서는 colors, shadows, gradients, glassmorphism, opacity만 관리// 프리미엄 투명도 시스템
 export const opacity = {
   0: 0,
   5: 0.05,

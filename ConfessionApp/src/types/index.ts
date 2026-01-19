@@ -7,6 +7,7 @@ export * from './database';
 
 // Navigation 타입
 export type RootStackParamList = {
+  Onboarding: undefined;
   MainTabs: undefined;
   Write: undefined;
   Reveal: {confessionId: string};

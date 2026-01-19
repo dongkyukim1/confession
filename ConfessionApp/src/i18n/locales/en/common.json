@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "Confession",
+    "tagline": "A space to share your heart anonymously"
+  },
+  "navigation": {
+    "home": "Home",
+    "discover": "Discover",
+    "myDiary": "My Diary",
+    "viewedDiary": "Read",
+    "profile": "Profile"
+  },
+  "actions": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "share": "Share",
+    "report": "Report",
+    "retry": "Retry",
+    "submit": "Submit",
+    "next": "Next",
+    "back": "Back",
+    "skip": "Skip",
+    "done": "Done",
+    "start": "Get Started"
+  },
+  "status": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "success": "Success",
+    "error": "Error",
+    "offline": "Offline"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} hr ago",
+    "daysAgo": "{{count}} days ago",
+    "weeksAgo": "{{count}} weeks ago"
+  },
+  "reaction": {
+    "like": "Like",
+    "dislike": "Dislike",
+    "liked": "{{count}} likes",
+    "disliked": "{{count}} dislikes"
+  },
+  "confession": {
+    "title": "Confession",
+    "write": "Write Confession",
+    "content": "Content",
+    "mood": "Mood",
+    "tags": "Tags",
+    "images": "Images",
+    "anonymous": "Anonymous",
+    "mine": "My Confession",
+    "others": "Others' Confession",
+    "empty": "No confessions yet",
+    "deleted": "This confession has been deleted"
+  },
+  "validation": {
+    "required": "This field is required",
+    "minLength": "Please enter at least {{min}} characters",
+    "maxLength": "Maximum {{max}} characters allowed"
+  }
+}

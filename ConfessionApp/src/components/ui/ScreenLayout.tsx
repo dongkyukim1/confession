@@ -95,3 +95,4 @@ const getStyles = (_colors: typeof lightColors) =>
       paddingHorizontal: spacing.xl, // 통일된 패딩
     },
   });
+

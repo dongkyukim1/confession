@@ -9,6 +9,13 @@ export {default as ViewedDiaryScreen} from './ViewedDiaryScreen';
 export {default as ProfileScreen} from './ProfileScreen';
 export {default as DiscoverScreen} from './DiscoverScreen';
 
+// 온보딩
+export {
+  OnboardingScreen,
+  checkOnboardingComplete,
+  resetOnboarding,
+} from './OnboardingScreen';
+
 // 개발/쇼케이스 화면
 export {AnimationShowcase} from './AnimationShowcase';
 export {IconShowcase} from './IconShowcase';

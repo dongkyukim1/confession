@@ -22,7 +22,10 @@
       "Bash(npm audit:*)",
       "Bash(npm run lint)",
       "Bash(npx eslint:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(git -C \"C:\\\\confession\" log --oneline -10)",
+      "Bash(npm run android:*)",
+      "Bash(./gradlew assembleDebug:*)"
     ]
   }
 }

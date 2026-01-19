@@ -1,0 +1,42 @@
+{
+  "network": {
+    "offline": "No internet connection",
+    "timeout": "Request timed out",
+    "serverError": "Server error occurred",
+    "unknown": "An unknown error occurred"
+  },
+  "validation": {
+    "content": {
+      "required": "Please enter content",
+      "minLength": "Confession must be at least 10 characters",
+      "maxLength": "Confession cannot exceed 500 characters"
+    },
+    "tags": {
+      "maxCount": "Maximum 5 tags allowed",
+      "maxLength": "Tag cannot exceed 20 characters",
+      "invalid": "Tags cannot contain special characters"
+    },
+    "images": {
+      "maxCount": "Maximum 3 images allowed",
+      "invalid": "Invalid image URL"
+    },
+    "comment": {
+      "required": "Please enter a comment",
+      "maxLength": "Comment cannot exceed 200 characters"
+    }
+  },
+  "auth": {
+    "deviceNotFound": "Device information not found",
+    "sessionExpired": "Session expired"
+  },
+  "confession": {
+    "notFound": "Confession not found",
+    "deleteFailed": "Failed to delete confession",
+    "createFailed": "Failed to create confession",
+    "loadFailed": "Failed to load confession"
+  },
+  "report": {
+    "failed": "Failed to report",
+    "alreadyReported": "Already reported this confession"
+  }
+}

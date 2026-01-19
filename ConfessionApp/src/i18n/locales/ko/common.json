@@ -1,0 +1,67 @@
+{
+  "app": {
+    "name": "고백",
+    "tagline": "익명으로 마음을 털어놓는 공간"
+  },
+  "navigation": {
+    "home": "홈",
+    "discover": "발견",
+    "myDiary": "내 고백",
+    "viewedDiary": "읽음",
+    "profile": "프로필"
+  },
+  "actions": {
+    "confirm": "확인",
+    "cancel": "취소",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "수정",
+    "share": "공유",
+    "report": "신고",
+    "retry": "다시 시도",
+    "submit": "제출",
+    "next": "다음",
+    "back": "뒤로",
+    "skip": "건너뛰기",
+    "done": "완료",
+    "start": "시작하기"
+  },
+  "status": {
+    "loading": "로딩 중...",
+    "saving": "저장 중...",
+    "success": "성공",
+    "error": "오류",
+    "offline": "오프라인"
+  },
+  "time": {
+    "justNow": "방금 전",
+    "minutesAgo": "{{count}}분 전",
+    "hoursAgo": "{{count}}시간 전",
+    "daysAgo": "{{count}}일 전",
+    "weeksAgo": "{{count}}주 전"
+  },
+  "reaction": {
+    "like": "좋아요",
+    "dislike": "싫어요",
+    "liked": "좋아요 {{count}}개",
+    "disliked": "싫어요 {{count}}개"
+  },
+  "confession": {
+    "title": "고백",
+    "write": "고백 작성",
+    "content": "내용",
+    "mood": "기분",
+    "tags": "태그",
+    "images": "이미지",
+    "anonymous": "익명",
+    "mine": "내 고백",
+    "others": "다른 사람의 고백",
+    "empty": "아직 고백이 없습니다",
+    "deleted": "삭제된 고백입니다"
+  },
+  "validation": {
+    "required": "필수 입력 항목입니다",
+    "minLength": "최소 {{min}}자 이상 입력해주세요",
+    "maxLength": "최대 {{max}}자까지 입력 가능합니다"
+  }
+}

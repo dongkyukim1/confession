@@ -1,0 +1,202 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  lint-and-typecheck:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ConfessionApp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ConfessionApp
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: ConfessionApp
+        run: npm run lint
+
+      - name: Run TypeScript check
+        working-directory: ConfessionApp
+        run: npx tsc --noEmit
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ConfessionApp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ConfessionApp
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ConfessionApp
+        run: npm test -- --coverage --watchAll=false
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v3
+        with:
+          files: ConfessionApp/coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: [lint-and-typecheck, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ConfessionApp/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        working-directory: ConfessionApp
+        run: npm ci
+
+      - name: Create .env file
+        working-directory: ConfessionApp
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+
+      - name: Build Android Release
+        working-directory: ConfessionApp/android
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: ConfessionApp/android/app/build/outputs/apk/release/*.apk
+          retention-days: 14
+
+  build-ios:
+    name: Build iOS (Validation)
+    runs-on: macos-latest
+    needs: [lint-and-typecheck, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ConfessionApp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ConfessionApp
+        run: npm ci
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: ConfessionApp/ios
+
+      - name: Install CocoaPods
+        working-directory: ConfessionApp/ios
+        run: |
+          gem install cocoapods
+          pod install
+
+      - name: Create .env file
+        working-directory: ConfessionApp
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+
+      # Note: Full iOS build requires signing certificates
+      # This step validates the project can be built
+      - name: Build iOS (Simulator)
+        working-directory: ConfessionApp/ios
+        run: |
+          xcodebuild \
+            -workspace ConfessionApp.xcworkspace \
+            -scheme ConfessionApp \
+            -sdk iphonesimulator \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ConfessionApp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ConfessionApp
+        run: npm ci
+
+      - name: Run npm audit
+        working-directory: ConfessionApp
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified

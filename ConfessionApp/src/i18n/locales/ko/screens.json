@@ -1,0 +1,90 @@
+{
+  "home": {
+    "title": "홈",
+    "welcome": "환영합니다",
+    "todayConfession": "오늘의 고백",
+    "writePrompt": "마음 속 이야기를 털어놓아 보세요",
+    "randomConfession": "랜덤 고백 보기",
+    "noConfessions": "표시할 고백이 없습니다",
+    "writeButton": "고백 작성하기"
+  },
+  "discover": {
+    "title": "발견",
+    "subtitle": "다른 사람들의 이야기",
+    "trending": "인기 고백",
+    "recent": "최신 고백",
+    "swipeHint": "좌우로 스와이프하여 고백을 탐색하세요",
+    "empty": "탐색할 고백이 없습니다"
+  },
+  "myDiary": {
+    "title": "내 고백",
+    "subtitle": "내가 작성한 고백들",
+    "count": "총 {{count}}개의 고백",
+    "empty": "아직 작성한 고백이 없습니다",
+    "emptyHint": "첫 번째 고백을 작성해보세요!",
+    "deleteConfirm": "이 고백을 삭제하시겠습니까?",
+    "deleteSuccess": "고백이 삭제되었습니다"
+  },
+  "viewedDiary": {
+    "title": "읽은 고백",
+    "subtitle": "내가 본 고백들",
+    "count": "총 {{count}}개의 고백을 읽었습니다",
+    "empty": "아직 읽은 고백이 없습니다",
+    "emptyHint": "홈에서 고백을 읽어보세요!"
+  },
+  "profile": {
+    "title": "프로필",
+    "statistics": "통계",
+    "settings": "설정",
+    "achievements": "업적",
+    "streak": "연속 작성",
+    "theme": "테마",
+    "font": "폰트",
+    "background": "배경",
+    "language": "언어",
+    "notifications": "알림",
+    "privacy": "개인정보 처리방침",
+    "terms": "이용약관",
+    "version": "버전 {{version}}",
+    "logout": "로그아웃"
+  },
+  "write": {
+    "title": "고백 작성",
+    "placeholder": "마음 속 이야기를 자유롭게 적어주세요...",
+    "moodSelect": "지금 기분은 어떤가요?",
+    "tagAdd": "태그 추가",
+    "tagHint": "태그를 입력하고 엔터를 누르세요",
+    "imageAdd": "이미지 추가",
+    "submit": "고백하기",
+    "cancel": "취소",
+    "success": "고백이 등록되었습니다!",
+    "charCount": "{{current}}/{{max}}"
+  },
+  "reveal": {
+    "title": "고백",
+    "loading": "고백을 불러오는 중...",
+    "error": "고백을 불러올 수 없습니다",
+    "reactions": "반응",
+    "comments": "댓글",
+    "share": "공유하기",
+    "report": "신고하기"
+  },
+  "onboarding": {
+    "welcome": "환영합니다!",
+    "intro": "고백 앱을 이용하기 전에 아래 약관에 동의해 주세요.",
+    "agreeAll": "전체 동의하기",
+    "age": "만 14세 이상입니다",
+    "ageDesc": "본 서비스는 만 14세 이상만 이용 가능합니다.",
+    "terms": "이용약관 동의",
+    "termsDesc": "서비스 이용에 관한 약관에 동의합니다.",
+    "privacy": "개인정보 처리방침 동의",
+    "privacyDesc": "개인정보 수집 및 이용에 동의합니다.",
+    "marketing": "마케팅 정보 수신 동의 (선택)",
+    "marketingDesc": "이벤트 및 업데이트 알림을 받습니다.",
+    "view": "보기",
+    "required": "[필수]",
+    "optional": "[선택]",
+    "notice": "선택 항목에 동의하지 않아도 서비스를 이용할 수 있습니다.",
+    "start": "시작하기"
+  }
+}

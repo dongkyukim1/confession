@@ -3,10 +3,12 @@
  * 
  * React Query를 사용한 고백 데이터 관리
  */
-import {useQuery, useMutation, useQueryClient} from '@tanstack/react-query';
+import {useQuery, useMutation, useQueryClient, useInfiniteQuery} from '@tanstack/react-query';
 import {ConfessionService} from '../services/confession.service';
-import {Confession, NewConfession} from '../types';
+import {Confession, NewConfession, ViewedConfession} from '../types';
 import {queryKeys} from '../lib/queryClient';
+
+const PAGE_SIZE = 20;
 
 /**
  * 내 고백 목록 조회
@@ -111,4 +113,68 @@ export function useDeleteConfession(deviceId: string) {
       });
     },
   });
+}
+
+// =====================================================
+// 무한 스크롤 Hooks
+// =====================================================
+
+/**
+ * 내 고백 목록 무한 스크롤 조회
+ */
+export function useMyConfessionsInfinite(deviceId: string) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.confessions.my(deviceId), 'infinite'],
+    queryFn: async ({pageParam = 0}) => {
+      const data = await ConfessionService.getMyConfessions(
+        deviceId,
+        PAGE_SIZE,
+        pageParam,
+      );
+      return {
+        data,
+        nextOffset: pageParam + data.length,
+        hasMore: data.length >= PAGE_SIZE,
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextOffset : undefined,
+    enabled: !!deviceId,
+  });
+}
+
+/**
+ * 조회한 고백 목록 무한 스크롤 조회
+ */
+export function useViewedConfessionsInfinite(deviceId: string) {
+  return useInfiniteQuery({
+    queryKey: [...queryKeys.confessions.viewed(deviceId), 'infinite'],
+    queryFn: async ({pageParam = 0}) => {
+      const data = await ConfessionService.getViewedConfessions(
+        deviceId,
+        PAGE_SIZE,
+        pageParam,
+      );
+      return {
+        data,
+        nextOffset: pageParam + data.length,
+        hasMore: data.length >= PAGE_SIZE,
+      };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore ? lastPage.nextOffset : undefined,
+    enabled: !!deviceId,
+  });
+}
+
+/**
+ * 무한 스크롤 데이터 평탄화 헬퍼
+ */
+export function flattenInfiniteData<T>(
+  pages: Array<{data: T[]; nextOffset: number; hasMore: boolean}> | undefined,
+): T[] {
+  if (!pages) return [];
+  return pages.flatMap((page) => page.data);
 }

@@ -6,7 +6,7 @@
  * - 날짜/시간은 작고 뉴트럴 컬러
  * - viewCount는 작고 뉴트럴 컬러 (비교 유도하지 않음)
  */
-import React, {useState, memo} from 'react';
+import React, {useState, memo, useMemo} from 'react';
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, borderRadius} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useTheme} from '../contexts/ThemeContext';
+import {confessionA11yLabel} from '../utils/a11y';
 
 interface ConfessionCardProps {
   content: string;
@@ -49,6 +50,15 @@ const ConfessionCard = memo(({
   const {colors} = useTheme();
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  // 접근성 라벨 생성
+  const accessibilityLabel = useMemo(() => {
+    return confessionA11yLabel({
+      content,
+      mood: mood || undefined,
+      createdAt: new Date(timestamp),
+    });
+  }, [content, mood, timestamp]);
   
   /**
    * 시간 포맷팅
@@ -71,7 +81,11 @@ const ConfessionCard = memo(({
   const styles = getStyles(colors);
 
   const CardContent = (
-    <View style={styles.card}>
+    <View
+      style={styles.card}
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={accessibilityLabel}>
       {/* 일기 내용 */}
       <Text style={styles.content} numberOfLines={4}>
         {content}
@@ -91,11 +105,16 @@ const ConfessionCard = memo(({
                 setSelectedImageIndex(idx);
                 setImageModalVisible(true);
               }}
-              activeOpacity={0.8}>
-              <Image 
-                source={{uri}} 
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`이미지 ${idx + 1}/${images.length}`}
+              accessibilityHint="탭하여 이미지를 확대합니다">
+              <Image
+                source={{uri}}
                 style={styles.galleryImage}
                 resizeMode="cover"
+                accessibilityRole="image"
+                accessibilityLabel={`첨부 이미지 ${idx + 1}`}
               />
             </TouchableOpacity>
           ))}
@@ -206,7 +225,10 @@ const ConfessionCard = memo(({
             <TouchableOpacity
               style={styles.imageModalCloseButton}
               onPress={() => setImageModalVisible(false)}
-              activeOpacity={0.7}>
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="이미지 닫기"
+              accessibilityHint="이미지 확대 보기를 닫습니다">
               <Ionicons name="close" size={28} color={colors.surface} />
             </TouchableOpacity>
           </View>
@@ -217,7 +239,12 @@ const ConfessionCard = memo(({
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint="탭하여 상세보기">
         {Content}
       </TouchableOpacity>
     );

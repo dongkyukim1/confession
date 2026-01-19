@@ -2,21 +2,24 @@
  * 본 일기장 화면
  *
  * 내가 조회한 고백 목록을 표시합니다.
- * React Query를 통한 서버 상태 관리
+ * React Query 무한 스크롤을 통한 서버 상태 관리
  */
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
+  View,
+  Text,
   StyleSheet,
   FlatList,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import {ViewedConfession} from '../types';
 import {getOrCreateDeviceId} from '../utils/deviceId';
-import {useViewedConfessions} from '../hooks/useConfessions';
+import {useViewedConfessionsInfinite, flattenInfiniteData} from '../hooks/useConfessions';
 import ConfessionCard from '../components/ConfessionCard';
 import {ScreenLayout} from '../components/ui/ScreenLayout';
 import {AnimatedEmptyState} from '../components/AnimatedEmptyState';
-import {spacing} from '../theme';
+import {typography, spacing} from '../theme';
 import {lightColors} from '../theme/colors';
 import {useThemeColors} from '../hooks/useThemeColors';
 import {BackgroundRenderer} from '../components/BackgroundRenderer';
@@ -25,13 +28,22 @@ export default function ViewedDiaryScreen() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const {colors, neutral} = useThemeColors();
 
-  // React Query 훅 사용
+  // React Query 무한 스크롤 훅
   const {
-    data: viewedConfessions = [],
+    data,
     isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
     refetch,
     isRefetching,
-  } = useViewedConfessions(deviceId || '', 50);
+  } = useViewedConfessionsInfinite(deviceId || '');
+
+  // 데이터 평탄화
+  const viewedConfessions = useMemo(
+    () => flattenInfiniteData(data?.pages),
+    [data?.pages],
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -44,9 +56,18 @@ export default function ViewedDiaryScreen() {
   /**
    * Pull to refresh
    */
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     refetch();
-  };
+  }, [refetch]);
+
+  /**
+   * 무한 스크롤 - 더 불러오기
+   */
+  const onEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   /**
    * 빈 화면 렌더링
@@ -60,12 +81,27 @@ export default function ViewedDiaryScreen() {
   );
 
   /**
+   * 로딩 푸터 렌더링
+   */
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[styles.footerText, {color: neutral[500]}]}>
+          더 불러오는 중...
+        </Text>
+      </View>
+    );
+  };
+
+  /**
    * 고백 카드 렌더링
    */
   const renderItem = ({item, index}: {item: ViewedConfession; index: number}) => {
     // confession이 배열로 올 수 있으므로 처리
-    const confession = Array.isArray(item.confession) 
-      ? item.confession[0] 
+    const confession = Array.isArray(item.confession)
+      ? item.confession[0]
       : item.confession;
 
     if (!confession) return null;
@@ -97,13 +133,14 @@ export default function ViewedDiaryScreen() {
       isLoading={isLoading}
       loadingMessage="일기를 불러오는 중..."
       contentStyle={styles.listContainer}>
-      {/* 목록 */}
+      {/* 목록 - 무한 스크롤 */}
       <FlatList
         data={viewedConfessions}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={renderEmpty}
+        ListFooterComponent={renderFooter}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -112,22 +149,36 @@ export default function ViewedDiaryScreen() {
             colors={[neutral[500]]}
           />
         }
+        onEndReached={onEndReached}
+        onEndReachedThreshold={0.5}
         showsVerticalScrollIndicator={false}
         initialNumToRender={10}
         maxToRenderPerBatch={5}
         windowSize={5}
+        removeClippedSubviews={true}
       />
     </ScreenLayout>
   );
 }
 
-const getStyles = (_colors: typeof lightColors) => StyleSheet.create({
-  listContainer: {
-    paddingHorizontal: 0, // ScreenLayout에서 이미 패딩 적용
-  },
-  listContent: {
-    paddingTop: spacing.lg,
-    paddingBottom: 100,
-  },
-});
-
+const getStyles = (colors: typeof lightColors) =>
+  StyleSheet.create({
+    listContainer: {
+      paddingHorizontal: 0,
+    },
+    listContent: {
+      paddingTop: spacing.lg,
+      paddingBottom: 100,
+      flexGrow: 1,
+    },
+    footerLoader: {
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+    footerText: {
+      ...typography.styles.caption,
+    },
+  });

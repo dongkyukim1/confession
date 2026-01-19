@@ -3,7 +3,7 @@
  *
  * 전체 화면으로 일기를 작성하는 전용 화면 - 선택한 폰트 적용
  */
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,7 @@ import MoodSelector from '../components/MoodSelector';
 import TagInput from '../components/TagInput';
 import ImagePickerComponent from '../components/ImagePicker';
 import FontSelector from '../components/FontSelector';
+import {validateConfessionContent} from '../validation/schemas';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -60,14 +61,23 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
     getOrCreateDeviceId().then(setDeviceId);
   }, []);
 
-  const handleSubmit = async () => {
-    if (!confession.trim()) {
-      showWarningModal(showModal, '알림', '일기 내용을 입력해주세요.');
-      return;
-    }
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-    if (confession.trim().length < 10) {
-      showWarningModal(showModal, '알림', '최소 10자 이상 작성해주세요.');
+  // Zod 스키마 검증
+  const validateForm = useCallback(() => {
+    const result = validateConfessionContent(confession.trim());
+    if (!result.isValid) {
+      setValidationError(result.error || '입력을 확인해주세요.');
+      return false;
+    }
+    setValidationError(null);
+    return true;
+  }, [confession]);
+
+  const handleSubmit = async () => {
+    // Zod 스키마 검증 사용
+    if (!validateForm()) {
+      showWarningModal(showModal, '알림', validationError || '입력 내용을 확인해주세요.');
       return;
     }
 
@@ -136,25 +146,31 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       {/* 헤더 */}
-      <View style={styles.header}>
+      <View style={styles.header} accessibilityRole="header">
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
-          hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+          hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
+          accessibilityRole="button"
+          accessibilityLabel="닫기"
+          accessibilityHint="작성을 취소하고 이전 화면으로 돌아갑니다">
           <View style={styles.backButtonInner}>
             <Ionicons name="close" size={28} color={colors.textPrimary} />
           </View>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>일기 쓰기</Text>
-        <TouchableOpacity 
+        <Text style={styles.headerTitle} accessibilityRole="header">일기 쓰기</Text>
+        <TouchableOpacity
           style={styles.headerRight}
           onPress={() => {
             console.log('🎨 폰트 버튼 클릭!');
             setFontSelectorVisible(true);
           }}
           activeOpacity={0.7}
-          hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+          hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}
+          accessibilityRole="button"
+          accessibilityLabel={`폰트 선택, 현재 ${fontOption.displayName}`}
+          accessibilityHint="탭하여 다른 폰트를 선택합니다">
           <Text style={styles.fontLabel}>{fontOption.displayName}</Text>
         </TouchableOpacity>
       </View>
@@ -180,7 +196,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
 
           {/* 일기 입력 */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>오늘의 이야기</Text>
+            <Text style={styles.sectionLabel} accessibilityRole="text">오늘의 이야기</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 style={[styles.textInput, {fontFamily: getFontFamily()}]}
@@ -189,11 +205,27 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
                 multiline
                 maxLength={MAX_CHARS + 50}
                 value={confession}
-                onChangeText={setConfession}
+                onChangeText={text => {
+                  setConfession(text);
+                  setValidationError(null);
+                }}
                 editable={!isLoading}
                 textAlignVertical="top"
+                accessibilityLabel="일기 내용 입력"
+                accessibilityHint={`최소 10자, 최대 ${MAX_CHARS}자 입력 가능합니다. 현재 ${confession.length}자`}
+                accessibilityState={{disabled: isLoading}}
               />
             </View>
+
+            {/* 유효성 검사 오류 메시지 */}
+            {validationError && (
+              <Text
+                style={styles.errorText}
+                accessibilityRole="alert"
+                accessibilityLiveRegion="polite">
+                {validationError}
+              </Text>
+            )}
 
             {/* 글자 수 프로그레스 바 */}
             <View style={styles.progressContainer}>
@@ -247,7 +279,14 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           ]}
           onPress={handleSubmit}
           disabled={!confession.trim() || isLoading || isOverLimit}
-          activeOpacity={0.85}>
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={isLoading ? '등록 중' : '고백하기'}
+          accessibilityHint="일기를 등록하고 다른 사람의 일기를 확인합니다"
+          accessibilityState={{
+            disabled: !confession.trim() || isLoading || isOverLimit,
+            busy: isLoading,
+          }}>
           <LinearGradient
             colors={
               confession.trim() && !isOverLimit
@@ -428,6 +467,13 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   },
   charCountError: {
     color: colors.error,
+  },
+  errorText: {
+    fontSize: 13,
+    color: colors.error,
+    marginTop: spacing.sm,
+    marginLeft: spacing.md,
+    fontWeight: '500',
   },
   bottomContainer: {
     position: 'absolute',

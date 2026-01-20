@@ -3,7 +3,7 @@
  *
  * 인기/트렌딩 고백 검색 및 발견 기능
  */
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {Confession} from '../types';
 import {handleApiError, withRetry, validateRequired} from './api.utils';
 
@@ -14,9 +14,11 @@ export class DiscoverService {
   static async getPopular(limit: number = 20): Promise<Confession[]> {
     try {
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('confessions')
           .select('*')
+          .eq('is_public', true) // 공개된 글만
           .order('like_count', {ascending: false, nullsFirst: false})
           .limit(limit);
 
@@ -37,12 +39,14 @@ export class DiscoverService {
   static async getTrending(hours: number = 24, limit: number = 20): Promise<Confession[]> {
     try {
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const cutoffTime = new Date();
         cutoffTime.setHours(cutoffTime.getHours() - hours);
 
         const {data, error} = await supabase
           .from('confessions')
           .select('*')
+          .eq('is_public', true) // 공개된 글만
           .gte('created_at', cutoffTime.toISOString())
           .order('like_count', {ascending: false, nullsFirst: false})
           .order('view_count', {ascending: false, nullsFirst: false})
@@ -65,9 +69,11 @@ export class DiscoverService {
   static async getRecent(limit: number = 20): Promise<Confession[]> {
     try {
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('confessions')
           .select('*')
+          .eq('is_public', true) // 공개된 글만
           .order('created_at', {ascending: false})
           .limit(limit);
 
@@ -90,9 +96,11 @@ export class DiscoverService {
       validateRequired(mood, '무드');
 
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('confessions')
           .select('*')
+          .eq('is_public', true) // 공개된 글만
           .eq('mood', mood)
           .order('created_at', {ascending: false})
           .limit(limit);
@@ -116,9 +124,11 @@ export class DiscoverService {
       validateRequired(tag, '태그');
 
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('confessions')
           .select('*')
+          .eq('is_public', true) // 공개된 글만
           .contains('tags', [tag])
           .order('created_at', {ascending: false})
           .limit(limit);
@@ -142,9 +152,11 @@ export class DiscoverService {
       validateRequired(keyword, '검색어');
 
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('confessions')
           .select('*')
+          .eq('is_public', true) // 공개된 글만
           .ilike('content', `%${keyword}%`)
           .order('created_at', {ascending: false})
           .limit(limit);
@@ -166,9 +178,11 @@ export class DiscoverService {
   static async getPopularTags(limit: number = 10): Promise<string[]> {
     try {
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('confessions')
           .select('tags')
+          .eq('is_public', true) // 공개된 글만
           .not('tags', 'is', null);
 
         if (error) throw error;

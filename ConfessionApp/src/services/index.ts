@@ -20,3 +20,6 @@ export * from './notification.service';
 
 // Utilities
 export * from './api.utils';
+
+// Premium Haptics
+export * from './premiumHaptics';

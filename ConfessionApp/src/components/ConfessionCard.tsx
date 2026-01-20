@@ -19,7 +19,8 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, spacing, borderRadius} from '../theme';
-import {lightColors} from '../theme/colors';
+import {lightColors, shadows} from '../theme/colors';
+import {premiumSpacing} from '../theme/spacing';
 import {useTheme} from '../contexts/ThemeContext';
 import {confessionA11yLabel} from '../utils/a11y';
 
@@ -257,27 +258,25 @@ ConfessionCard.displayName = 'ConfessionCard';
 
 const getStyles = (colors: typeof lightColors) => {
   const neutral0 = typeof colors.neutral === 'object' ? colors.neutral[0] : '#FFFFFF';
-  const neutral200 = typeof colors.neutral === 'object' ? colors.neutral[200] : '#E5E5E5';
   const neutral500 = typeof colors.neutral === 'object' ? colors.neutral[500] : '#737373';
-  const neutral700 = typeof colors.neutral === 'object' ? colors.neutral[700] : '#404040';
   const neutral900 = typeof colors.neutral === 'object' ? colors.neutral[900] : '#171717';
   
   return StyleSheet.create({
     card: {
       backgroundColor: neutral0,
       borderRadius: borderRadius['2xl'], // 더 둥근 모서리
-      padding: spacing.xl, // 더 넉넉한 패딩
-      marginBottom: spacing.lg, // 카드 간격 증가
-      borderWidth: 1,
-      borderColor: neutral200,
+      padding: premiumSpacing.cardPadding, // 프리미엄 패딩 24px
+      marginBottom: premiumSpacing.cardGap, // 프리미엄 카드 간격 20px
+      borderWidth: 0, // 테두리 제거 (프리미엄)
+      ...shadows.premium.card, // 프리미엄 초미세 그림자
     },
     content: {
-      fontSize: typography.fontSize.base,
+      fontSize: 17, // 약간 더 큰 폰트
       fontWeight: typography.fontWeight.regular,
       color: neutral900,
-      marginBottom: spacing.md,
-      lineHeight: typography.lineHeight.relaxed * typography.fontSize.base, // 더 넉넉한 행간
-      letterSpacing: typography.letterSpacing.normal,
+      marginBottom: spacing.xl, // 넉넉한 하단 여백
+      lineHeight: premiumSpacing.contentLineHeight, // 프리미엄 행간 28px
+      letterSpacing: 0.3, // 미세한 자간
     },
   imagesGallery: {
     marginBottom: spacing.md,
@@ -317,15 +316,16 @@ const getStyles = (colors: typeof lightColors) => {
     fontSize: 22,
   },
   tag: {
-    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[100] : '#F5F5F5',
+    backgroundColor: 'transparent', // 배경 제거 (프리미엄)
     paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    borderRadius: borderRadius.lg, // 더 둥근 모서리
+    paddingHorizontal: 0, // 패딩 제거
+    marginRight: spacing.sm,
   },
   tagText: {
-    fontSize: typography.fontSize.xs,
-    color: neutral700,
+    fontSize: typography.fontSize.sm, // 약간 더 큰 폰트
+    color: neutral500, // 더 뉴트럴한 색상
     fontWeight: typography.fontWeight.regular,
+    letterSpacing: 0.2,
   },
   moreTagsText: {
     fontSize: typography.fontSize.xs,
@@ -336,9 +336,8 @@ const getStyles = (colors: typeof lightColors) => {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: neutral200,
+    paddingTop: spacing.lg, // 넉넉한 상단 패딩
+    borderTopWidth: 0, // 테두리 제거 (프리미엄)
   },
   timestamp: {
     fontSize: typography.fontSize.xs,

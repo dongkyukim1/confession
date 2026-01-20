@@ -24,7 +24,7 @@ import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RouteProp} from '@react-navigation/native';
 import {RootStackParamList, Confession} from '../types';
 import {LikeType, ReportReason} from '../types/database';
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {typography, shadows, borderRadius} from '../theme';
 import {spacing} from '../theme/spacing';
@@ -100,6 +100,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
   const fetchConfession = async (id: string) => {
     if (!confessionId) return;
     try {
+      const supabase = await getSupabaseClient();
       const {data, error} = await supabase
         .from('confessions')
         .select('*')
@@ -131,7 +132,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
           }, {
             onConflict: 'device_id,confession_id',
           });
-          
+
         // Check user's like/dislike
         const {data: likeData} = await supabase
           .from('likes')
@@ -143,7 +144,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
         if (likeData) {
           setUserLikeType(likeData.like_type);
         }
-        
+
         // Check if user has reported
         const {data: reportData} = await supabase
           .from('reports')
@@ -238,6 +239,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
     if (!deviceId || !confession) return;
 
     try {
+      const supabase = await getSupabaseClient();
       if (userLikeType === 'like') {
         await supabase
           .from('likes')
@@ -285,6 +287,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
     if (!deviceId) return;
 
     try {
+      const supabase = await getSupabaseClient();
       if (userLikeType === 'dislike') {
         await supabase
           .from('likes')
@@ -323,6 +326,7 @@ export default function RevealScreen({navigation, route}: RevealScreenProps) {
 
     setIsSubmittingReport(true);
     try {
+      const supabase = await getSupabaseClient();
       await supabase.from('reports').insert({
         device_id: deviceId,
         confession_id: confessionId,

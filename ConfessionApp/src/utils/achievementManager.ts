@@ -3,7 +3,7 @@
  * 
  * 게이미피케이션 업적 해제 및 조회 로직
  */
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {AchievementType, Achievement} from '../types/database';
 import {calculateStreak} from './statistics';
 import {Confession} from '../types';
@@ -16,6 +16,7 @@ export const hasUnlockedAchievement = async (
   achievementType: AchievementType,
 ): Promise<boolean> => {
   try {
+    const supabase = await getSupabaseClient();
     const {data, error} = await supabase
       .from('user_achievements')
       .select('id')
@@ -57,6 +58,7 @@ export const checkAndUnlockAchievement = async (
     }
 
     // 업적 해제
+    const supabase = await getSupabaseClient();
     const {data, error} = await supabase
       .from('user_achievements')
       .insert({
@@ -87,6 +89,7 @@ const checkAchievementCondition = async (
   achievementType: AchievementType,
 ): Promise<boolean> => {
   try {
+    const supabase = await getSupabaseClient();
     switch (achievementType) {
       case 'first_post': {
         // 첫 글 작성: 총 글 개수가 1개인지 확인
@@ -141,6 +144,7 @@ export const getUnviewedAchievements = async (
   deviceId: string,
 ): Promise<Achievement[]> => {
   try {
+    const supabase = await getSupabaseClient();
     const {data, error} = await supabase
       .from('user_achievements')
       .select('*')
@@ -163,6 +167,7 @@ export const markAchievementAsViewed = async (
   achievementId: string,
 ): Promise<boolean> => {
   try {
+    const supabase = await getSupabaseClient();
     const {error} = await supabase
       .from('user_achievements')
       .update({viewed: true})
@@ -183,6 +188,7 @@ export const getAllAchievements = async (
   deviceId: string,
 ): Promise<Achievement[]> => {
   try {
+    const supabase = await getSupabaseClient();
     const {data, error} = await supabase
       .from('user_achievements')
       .select('*')

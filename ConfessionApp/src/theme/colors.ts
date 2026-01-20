@@ -893,6 +893,44 @@ export type ColorKey = keyof typeof colors;
 // 프리미엄 디자인 시스템 (Premium Design System)
 // ============================================// 섀도우 시스템 (고급스러운 깊이감)
 export const shadows = {
+  // === 프리미엄 그림자 (초미세, 고급스러운 깊이감) ===
+  premium: {
+    card: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.03,  // 초미세 3%
+      shadowRadius: 12,
+      elevation: 2,
+    },
+    cardHover: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,  // 호버 시 6%
+      shadowRadius: 20,
+      elevation: 4,
+    },
+    fab: {
+      shadowColor: '#EC4899',  // 브랜드 컬러 글로우
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 10,
+    },
+    subtle: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.02,  // 거의 보이지 않는 미세한 그림자
+      shadowRadius: 8,
+      elevation: 1,
+    },
+    stat: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 10,
+      elevation: 2,
+    },
+  },
   // === 레거시 키 (하위 호환성) ===
   small: {
     shadowColor: '#000',

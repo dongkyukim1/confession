@@ -205,20 +205,20 @@ export function containsBannedWords(text: string): boolean {
  */
 export function validateConfessionContent(
   content: string,
-): {valid: true} | {valid: false; error: string} {
+): {isValid: true} | {isValid: false; error: string} {
   // 스키마 검증
   const schemaResult = confessionSchema.shape.content.safeParse(content);
   if (!schemaResult.success) {
     return {
-      valid: false,
+      isValid: false,
       error: schemaResult.error.errors[0]?.message || '유효하지 않은 내용입니다',
     };
   }
 
   // 금지어 검증
   if (containsBannedWords(content)) {
-    return {valid: false, error: '부적절한 내용이 포함되어 있습니다'};
+    return {isValid: false, error: '부적절한 내용이 포함되어 있습니다'};
   }
 
-  return {valid: true};
+  return {isValid: true};
 }

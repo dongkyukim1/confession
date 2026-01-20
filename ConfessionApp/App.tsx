@@ -127,22 +127,23 @@ function MainTabs() {
               colors.neutral[0]
                 ? colors.neutral[0]
                 : '#FFFFFF',
-            borderTopWidth: 0,
-            height: 70,
-            paddingBottom: 12,
+            borderTopWidth: 0, // 상단 테두리 제거 (프리미엄)
+            height: 64, // 프리미엄 높이 (70 → 64)
+            paddingBottom: 10,
             paddingTop: 8,
             paddingHorizontal: 16,
+            // 프리미엄 그림자 (더 미세함)
             shadowColor: '#000',
-            shadowOffset: {width: 0, height: -4},
-            shadowOpacity: 0.08,
-            shadowRadius: 12,
-            elevation: 8,
+            shadowOffset: {width: 0, height: -2},
+            shadowOpacity: 0.04, // 4% 투명도 (0.08 → 0.04)
+            shadowRadius: 16,
+            elevation: 6,
           },
           tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '600',
-            marginTop: 4,
-            letterSpacing: 0.2,
+            fontSize: 11, // 약간 작게 (12 → 11)
+            fontWeight: '500', // 더 가벼운 폰트 (600 → 500)
+            marginTop: 2,
+            letterSpacing: 0.3,
           },
           tabBarItemStyle: {
             paddingVertical: 4,

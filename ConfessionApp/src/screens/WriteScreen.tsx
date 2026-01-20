@@ -22,7 +22,7 @@ import {
 } from 'react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList, Confession} from '../types';
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../contexts/ModalContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -151,6 +151,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
     setIsLoading(true);
 
     try {
+      const supabase = await getSupabaseClient();
       const {data, error} = await supabase
         .from('confessions')
         .insert({
@@ -203,9 +204,12 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
       const randomIndex = Math.floor(Math.random() * randomConfession.length);
       const selectedConfession = randomConfession[randomIndex];
       navigation.replace('Reveal', {confessionId: selectedConfession.id});
-    } catch (error) {
+    } catch (error: any) {
       console.error('일기 저장 오류:', error);
-      showErrorModal(showModal, '오류', '저장 중 문제가 발생했습니다.\n잠시 후 다시 시도해주세요.');
+      console.error('에러 상세:', JSON.stringify(error, null, 2));
+      console.error('에러 메시지:', error?.message);
+      console.error('에러 코드:', error?.code);
+      showErrorModal(showModal, '오류', `저장 실패: ${error?.message || '알 수 없는 오류'}`);
     } finally {
       setIsLoading(false);
     }

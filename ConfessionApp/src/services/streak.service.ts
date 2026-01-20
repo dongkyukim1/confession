@@ -3,7 +3,7 @@
  *
  * 스트릭(연속 기록) 관련 비즈니스 로직을 처리합니다.
  */
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {UserStreak} from '../types';
 import {handleApiError, withRetry, validateRequired} from './api.utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -45,6 +45,7 @@ export class StreakService {
       }
 
       // 서버에서 조회
+      const supabase = await getSupabaseClient();
       const result = await withRetry(async () => {
         const {data, error} = await supabase
           .from('user_streaks')
@@ -78,10 +79,11 @@ export class StreakService {
         device_id: deviceId,
         current_streak: 0,
         longest_streak: 0,
-        last_confession_date: null,
+        last_activity_date: null,
         updated_at: now,
       };
 
+      const supabase = await getSupabaseClient();
       await withRetry(async () => {
         const {error} = await supabase.from('user_streaks').upsert(newStreak, {
           onConflict: 'device_id',
@@ -144,10 +146,11 @@ export class StreakService {
         device_id: deviceId,
         current_streak: newCurrentStreak,
         longest_streak: newLongestStreak,
-        last_confession_date: today,
+        last_activity_date: today,
         updated_at: now,
       };
 
+      const supabase = await getSupabaseClient();
       await withRetry(async () => {
         const {error} = await supabase.from('user_streaks').upsert(updatedStreak, {
           onConflict: 'device_id',
@@ -244,12 +247,14 @@ export class StreakService {
    */
   private static mapToStreakInfo(data: any): StreakInfo {
     const today = this.getDateString(new Date());
-    const todayCompleted = data.last_confession_date === today;
+    // DB 컬럼명은 last_activity_date, 앱 내부에서는 lastConfessionDate로 사용
+    const lastDate = data.last_activity_date || data.last_confession_date || null;
+    const todayCompleted = lastDate === today;
 
     return {
       currentStreak: data.current_streak || 0,
       longestStreak: data.longest_streak || 0,
-      lastConfessionDate: data.last_confession_date || null,
+      lastConfessionDate: lastDate,
       todayCompleted,
       streakMilestone: this.getAchievedMilestone(data.current_streak || 0),
     };

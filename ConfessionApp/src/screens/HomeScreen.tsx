@@ -454,40 +454,44 @@ const getStyles = (
       fontSize: 32,
       fontWeight: '700',
       color: neutral700,
-      lineHeight: 40,
-      marginBottom: 12,
+      lineHeight: 42, // 넉넉한 행간
+      marginBottom: 16, // 더 넉넉한 간격
+      letterSpacing: -0.5, // 프리미엄 자간
     },
     heroSubtitle: {
       fontSize: 16,
       color: neutral400,
-      lineHeight: 24,
+      lineHeight: 26, // 넉넉한 행간
+      letterSpacing: 0.2,
     },
     statsContainer: {
       paddingHorizontal: 24,
-      marginBottom: 32,
+      marginBottom: 40, // 프리미엄 섹션 간격 (32 → 40)
     },
     sectionTitle: {
       fontSize: 20,
       fontWeight: '600',
       color: neutral700,
-      marginBottom: 16,
+      marginBottom: 20, // 넉넉한 간격
+      letterSpacing: -0.3, // 미세한 자간
     },
     statsGrid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 12,
+      gap: 16, // 넉넉한 간격 (12 → 16)
     },
     statCard: {
       flex: 1,
-      minWidth: (width - 72) / 2,
+      minWidth: (width - 80) / 2, // 조정된 최소 너비
       backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 20,
+      borderRadius: 20, // 더 둥근 모서리 (16 → 20)
+      padding: 24, // 넉넉한 패딩 (20 → 24)
       alignItems: 'center',
+      // 프리미엄 초미세 그림자
       shadowColor: '#000',
       shadowOffset: {width: 0, height: 2},
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
+      shadowOpacity: 0.03, // 3% 투명도
+      shadowRadius: 12,
       elevation: 2,
     },
     statIconContainer: {
@@ -524,14 +528,15 @@ const getStyles = (
     },
     confessionCard: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 12,
+      borderRadius: 20, // 더 둥근 모서리 (16 → 20)
+      padding: 20, // 넉넉한 패딩 (16 → 20)
+      marginBottom: 16, // 넉넉한 간격 (12 → 16)
+      // 프리미엄 초미세 그림자
       shadowColor: '#000',
-      shadowOffset: {width: 0, height: 1},
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 1,
+      shadowOffset: {width: 0, height: 2},
+      shadowOpacity: 0.03, // 3% 투명도
+      shadowRadius: 12,
+      elevation: 2,
     },
     confessionHeader: {
       flexDirection: 'row',
@@ -552,10 +557,11 @@ const getStyles = (
       color: neutral400,
     },
     confessionContent: {
-      fontSize: 15,
-      lineHeight: 22,
+      fontSize: 16, // 약간 더 큰 폰트 (15 → 16)
+      lineHeight: 26, // 넉넉한 행간 (22 → 26)
       color: neutral700,
-      marginBottom: 12,
+      marginBottom: 16, // 넉넉한 간격 (12 → 16)
+      letterSpacing: 0.2,
     },
     confessionTags: {
       flexDirection: 'row',
@@ -615,11 +621,12 @@ const getStyles = (
       backgroundColor: colors.accent,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: colors.accent,
-      shadowOffset: {width: 0, height: 4},
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 8,
+      // 프리미엄 FAB 글로우 그림자
+      shadowColor: '#EC4899', // 브랜드 컬러
+      shadowOffset: {width: 0, height: 6},
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      elevation: 10,
     },
   });
 

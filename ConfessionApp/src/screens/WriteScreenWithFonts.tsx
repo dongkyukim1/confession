@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList, Confession} from '../types';
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {getOrCreateDeviceId} from '../utils/deviceId';
 import {useModal, showWarningModal, showSuccessModal, showErrorModal} from '../contexts/ModalContext';
 import LinearGradient from 'react-native-linear-gradient';
@@ -33,6 +33,8 @@ import TagInput from '../components/TagInput';
 import ImagePickerComponent from '../components/ImagePicker';
 import FontSelector from '../components/FontSelector';
 import {validateConfessionContent} from '../validation/schemas';
+import {MissionService} from '../services/mission.service';
+import {selectBestMatch} from '../utils/similarity';
 
 type ConfessionRow = Pick<Confession, 'id'>;
 
@@ -53,6 +55,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
   const [tags, setTags] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [fontSelectorVisible, setFontSelectorVisible] = useState(false);
+  const [isPublic, setIsPublic] = useState(true); // 공개/비공개 설정
   const {showModal} = useModal();
   const {colors} = useTheme();
   const {getFontFamily, fontOption} = useFont();
@@ -89,6 +92,7 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
     setIsLoading(true);
 
     try {
+      const supabase = await getSupabaseClient();
       const {data, error} = await supabase
         .from('confessions')
         .insert({
@@ -97,39 +101,72 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           mood: selectedMood || null,
           tags: tags.length > 0 ? tags : null,
           images: images.length > 0 ? images : null,
+          is_public: isPublic, // 공개/비공개 설정
         })
         .select()
         .single<Confession>();
 
       if (error) throw error;
 
-      // 다른 사람의 랜덤 고해성사 가져오기
-      const {data: randomConfession, error: fetchError} = await supabase
+      // 미션 진행도 업데이트
+      try {
+        await MissionService.onConfessionCreated(deviceId, {
+          hasMood: !!selectedMood,
+          hasTags: tags.length > 0,
+          hasImages: images.length > 0,
+          contentLength: confession.trim().length,
+        });
+      } catch (missionError) {
+        console.warn('[WriteScreen] 미션 업데이트 실패:', missionError);
+      }
+
+      // 다른 사람의 공개된 일기 가져오기 (태그 매칭용)
+      const {data: candidates, error: fetchError} = await supabase
         .from('confessions')
-        .select('id')
+        .select('id, content, mood, tags')
         .neq('device_id', deviceId)
         .neq('id', data.id)
-        .order('view_count', {ascending: true})
-        .limit(10)
-        .returns<ConfessionRow[]>();
+        .eq('is_public', true) // 공개된 글만
+        .order('created_at', {ascending: false})
+        .limit(50);
 
       if (fetchError) throw fetchError;
 
-      if (!randomConfession || randomConfession.length === 0) {
+      if (!candidates || candidates.length === 0) {
         showSuccessModal(
           showModal,
           '첫 번째 작성자',
           '아직 다른 일기가 없습니다.\n당신이 첫 번째입니다! 🎉',
           true,
-          [{text: '확인', onPress: () => navigation.goBack()}],
+          [{text: '확인', onPress: () => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'MainTabs'}],
+              });
+            }
+          }}],
         );
         return;
       }
 
-      // 랜덤으로 하나 선택 후 Reveal 화면으로 이동
-      const randomIndex = Math.floor(Math.random() * randomConfession.length);
-      const selectedConfession = randomConfession[randomIndex];
-      navigation.replace('Reveal', {confessionId: selectedConfession.id});
+      // 태그 + 유사도 기반으로 가장 적합한 일기 선택
+      const myConfession = {
+        id: data.id,
+        content: confession.trim(),
+        mood: selectedMood || null,
+        tags: tags.length > 0 ? tags : null,
+      };
+      const bestMatch = selectBestMatch(myConfession, candidates);
+
+      if (bestMatch) {
+        navigation.replace('Reveal', {confessionId: bestMatch.id});
+      } else {
+        // fallback: 첫 번째 항목
+        navigation.replace('Reveal', {confessionId: candidates[0].id});
+      }
     } catch (error) {
       console.error('일기 저장 오류:', error);
       showErrorModal(showModal, '오류', '저장 중 문제가 발생했습니다.\n잠시 후 다시 시도해주세요.');
@@ -266,6 +303,37 @@ export default function WriteScreen({navigation}: WriteScreenProps) {
           {/* 태그 입력 */}
           <View style={styles.section}>
             <TagInput tags={tags} onTagsChange={setTags} />
+          </View>
+
+          {/* 공개/비공개 설정 */}
+          <View style={styles.section}>
+            <View style={styles.visibilityContainer}>
+              <View style={styles.visibilityInfo}>
+                <Text style={styles.visibilityLabel}>
+                  {isPublic ? '🌍 공개' : '🔒 비공개'}
+                </Text>
+                <Text style={styles.visibilityHint}>
+                  {isPublic
+                    ? '다른 사람들이 발견 탭에서 볼 수 있어요'
+                    : '나만 볼 수 있어요'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.visibilityToggle,
+                  isPublic && styles.visibilityToggleActive,
+                ]}
+                onPress={() => setIsPublic(!isPublic)}
+                activeOpacity={0.7}
+                accessibilityRole="switch"
+                accessibilityLabel={isPublic ? '공개 상태' : '비공개 상태'}
+                accessibilityState={{checked: isPublic}}>
+                <View style={[
+                  styles.visibilityToggleCircle,
+                  isPublic && styles.visibilityToggleCircleActive,
+                ]} />
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -467,6 +535,53 @@ const getStyles = (colors: typeof lightColors) => StyleSheet.create({
   },
   charCountError: {
     color: colors.error,
+  },
+  visibilityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[50] : colors.backgroundAlt,
+    borderRadius: borderRadius.lg,
+  },
+  visibilityInfo: {
+    flex: 1,
+  },
+  visibilityLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  visibilityHint: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  visibilityToggle: {
+    width: 52,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: typeof colors.neutral === 'object' ? colors.neutral[300] : '#D1D5DB',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  visibilityToggleActive: {
+    backgroundColor: '#667EEA',
+  },
+  visibilityToggleCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  visibilityToggleCircleActive: {
+    alignSelf: 'flex-end',
   },
   errorText: {
     fontSize: 13,

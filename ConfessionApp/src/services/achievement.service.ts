@@ -3,7 +3,7 @@
  * 
  * 업적 관련 비즈니스 로직을 처리합니다.
  */
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {Achievement} from '../types';
 import {handleApiError, withRetry, validateRequired} from './api.utils';
 
@@ -22,6 +22,7 @@ export class AchievementService {
   static async getAllAchievements(): Promise<Achievement[]> {
     try {
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('achievements')
           .select('*')
@@ -47,6 +48,7 @@ export class AchievementService {
       validateRequired(deviceId, '기기 ID');
 
       const result = await withRetry(async () => {
+        const supabase = await getSupabaseClient();
         const {data, error} = await supabase
           .from('user_achievements')
           .select(`
@@ -92,6 +94,7 @@ export class AchievementService {
       validateRequired(achievementId, '업적 ID');
 
       // 업적 정보 조회
+      const supabase = await getSupabaseClient();
       const {data: achievement} = await supabase
         .from('achievements')
         .select('max_progress')
@@ -106,7 +109,8 @@ export class AchievementService {
       const now = new Date().toISOString();
 
       await withRetry(async () => {
-        const {error} = await supabase.from('user_achievements').upsert(
+        const supabaseClient = await getSupabaseClient();
+        const {error} = await supabaseClient.from('user_achievements').upsert(
           {
             device_id: deviceId,
             achievement_id: achievementId,
@@ -139,6 +143,7 @@ export class AchievementService {
       validateRequired(deviceId, '기기 ID');
 
       // 통계 조회
+      const supabase = await getSupabaseClient();
       const {data: stats} = await supabase
         .from('confessions')
         .select('id, created_at')
@@ -204,6 +209,7 @@ export class AchievementService {
     achievementId: string,
   ): Promise<Achievement | null> {
     try {
+      const supabase = await getSupabaseClient();
       const {data, error} = await supabase
         .from('achievements')
         .select('*')

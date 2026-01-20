@@ -26,7 +26,12 @@
       "Bash(git -C \"C:\\\\confession\" log --oneline -10)",
       "Bash(npm run android:*)",
       "Bash(./gradlew assembleDebug:*)",
-      "Bash(./gradlew clean:*)"
+      "Bash(./gradlew clean:*)",
+      "Bash(npx react-native start --reset-cache)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c \"taskkill /PID 10696 /F\")"
     ]
   }
 }

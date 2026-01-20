@@ -61,6 +61,18 @@ export type SpacingKey = keyof typeof spacing;
 export type BorderRadiusKey = keyof typeof borderRadius;
 export type IconSizeKey = keyof typeof iconSize;
 
+// 프리미엄 간격 토큰 (넉넉한 여백, 고급스러운 레이아웃)
+export const premiumSpacing = {
+  pageMargin: 24,      // 페이지 좌우 마진
+  cardGap: 20,         // 카드 간 간격
+  sectionGap: 40,      // 섹션 간 간격
+  heroGap: 48,         // 히어로 섹션 간격
+  cardPadding: 24,     // 카드 내부 패딩
+  contentLineHeight: 28, // 콘텐츠 line-height
+} as const;
+
+export type PremiumSpacingKey = keyof typeof premiumSpacing;
+
 
 
 

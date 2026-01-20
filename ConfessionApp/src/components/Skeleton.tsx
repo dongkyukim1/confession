@@ -1,50 +1,112 @@
 /**
  * Skeleton Components
- * 
+ *
  * 로딩 중 표시할 스켈레톤 UI
+ * 프리미엄 시머 효과 적용
  */
 import React, {useEffect, useRef} from 'react';
-import {View, StyleSheet, Animated, ViewStyle} from 'react-native';
+import {View, StyleSheet, Animated, ViewStyle, Dimensions} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {lightColors} from '../theme/colors';
+
+const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
 interface SkeletonProps {
   width?: number | string;
   height?: number;
   borderRadius?: number;
   style?: ViewStyle;
+  shimmer?: boolean; // 시머 효과 활성화
 }
 
 /**
- * 기본 스켈레톤
+ * 기본 스켈레톤 (프리미엄 시머 효과)
  */
 export function Skeleton({
   width = '100%',
   height = 20,
   borderRadius = 8,
   style,
+  shimmer = true, // 기본적으로 시머 활성화
 }: SkeletonProps) {
+  const shimmerAnim = useRef(new Animated.Value(-1)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
+    if (shimmer) {
+      // 프리미엄 시머 애니메이션 (1200ms)
+      const shimmerLoop = Animated.loop(
+        Animated.timing(shimmerAnim, {
           toValue: 1,
-          duration: 800,
+          duration: 1200,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]),
+      );
+      shimmerLoop.start();
+      return () => shimmerLoop.stop();
+    } else {
+      // 기존 펄스 애니메이션
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ]),
+      );
+      pulse.start();
+      return () => pulse.stop();
+    }
+  }, [shimmer, shimmerAnim, pulseAnim]);
+
+  // 시머 효과
+  if (shimmer) {
+    const translateX = shimmerAnim.interpolate({
+      inputRange: [-1, 1],
+      outputRange: [-SCREEN_WIDTH, SCREEN_WIDTH],
+    });
+
+    return (
+      <View
+        style={[
+          styles.skeleton,
+          {
+            width,
+            height,
+            borderRadius,
+            overflow: 'hidden',
+          },
+          style,
+        ]}>
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFill,
+            {
+              transform: [{translateX}],
+            },
+          ]}>
+          <LinearGradient
+            colors={[
+              'rgba(255,255,255,0)',
+              'rgba(255,255,255,0.4)',
+              'rgba(255,255,255,0)',
+            ]}
+            start={{x: 0, y: 0.5}}
+            end={{x: 1, y: 0.5}}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      </View>
     );
-    pulse.start();
+  }
 
-    return () => pulse.stop();
-  }, [pulseAnim]);
-
+  // 기존 펄스 효과 (fallback)
   const opacity = pulseAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0.3, 0.7],

@@ -77,14 +77,14 @@ export const Button = memo(({
   const handlePressIn = useCallback(() => {
     Animated.parallel([
       Animated.spring(scaleAnim, {
-        toValue: 0.97,
-        damping: 15,
-        stiffness: 300,
+        toValue: 0.985, // 프리미엄: 더 미세한 스케일 (0.97 → 0.985)
+        damping: 20, // 더 부드러운 댐핑
+        stiffness: 280,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
-        toValue: 0.9,
-        duration: 100,
+        toValue: 0.92, // 약간 더 높은 투명도
+        duration: 80, // 더 빠른 응답
         useNativeDriver: true,
       }),
     ]).start();
@@ -94,13 +94,13 @@ export const Button = memo(({
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
-        damping: 12,
-        stiffness: 200,
+        damping: 15, // 더 부드러운 복귀
+        stiffness: 180,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
         toValue: 1,
-        duration: 150,
+        duration: 120, // 더 빠른 복귀
         useNativeDriver: true,
       }),
     ]).start();

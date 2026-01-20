@@ -3,7 +3,7 @@
  *
  * 일일 미션 관련 비즈니스 로직을 처리합니다.
  */
-import {supabase} from '../lib/supabase';
+import {getSupabaseClient} from '../lib/supabase';
 import {Mission, MissionType, UserDailyMission} from '../types';
 import {handleApiError, withRetry, validateRequired} from './api.utils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -323,6 +323,7 @@ export class MissionService {
         is_completed: m.isCompleted,
       }));
 
+      const supabase = await getSupabaseClient();
       await supabase.from('user_daily_missions').upsert(records, {
         onConflict: 'device_id,mission_id,mission_date',
       });
